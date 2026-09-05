@@ -1,0 +1,25 @@
+<?php
+return [
+    'base_currency' => 'USD',
+    'currencies' => ['USD', 'KHR'],
+    'default_exchange_rate' => 4047.000000,
+    'permission_groups' => [
+        'dashboard' => ['view'],
+        'products' => ['view', 'create', 'update', 'delete', 'export'],
+        'categories' => ['view', 'create', 'update', 'delete'],
+        'brands' => ['view', 'create', 'update', 'delete'],
+        'customers' => ['view', 'create', 'update', 'delete', 'export'],
+        'suppliers' => ['view', 'create', 'update', 'delete'],
+        'sales' => ['view', 'create'],
+        'orders' => ['view', 'update', 'delete', 'approve'],
+        'purchases' => ['view', 'create', 'update', 'delete', 'approve'],
+        'inventory' => ['view', 'adjust'],
+        'expenses' => ['view', 'create', 'update', 'delete', 'approve'],
+        'users' => ['view', 'create', 'update', 'delete'],
+        'roles' => ['view', 'create', 'update', 'delete', 'manage'],
+        'branches' => ['view', 'create', 'update', 'delete'],
+        'reports' => ['view', 'export'],
+        'ai' => ['view'],
+        'settings' => ['view', 'update'],
+    ],
+];
