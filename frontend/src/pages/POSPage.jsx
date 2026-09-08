@@ -24,7 +24,7 @@ export default function POSPage() {
   const fmt = useFormat();
   const money = fmt.money;
   const { settings } = useSettings();
-  const { can } = useAuth();
+  const { user, can } = useAuth();
   const toast = useToast();
 
   const [data, setData] = useState({ products: [], categories: [], customers: [] });
@@ -42,17 +42,21 @@ export default function POSPage() {
   const [received, setReceived] = useState(""); // typed in the DISPLAY currency
   const [paying, setPaying] = useState(false);
   const [completed, setCompleted] = useState(null);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranchId, setSelectedBranchId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [p, c, cu] = await Promise.all([
+      const [p, c, cu, br] = await Promise.all([
         api.list("products", { perPage: 500, filters: { status: "active" }, sort: { key: "name", dir: "asc" } }),
         api.list("categories", { perPage: 200, filters: { status: "active" } }),
         api.list("customers", { perPage: 500, filters: { status: "active" } }),
+        api.list("branches", { perPage: 100, filters: { status: "active" } }),
       ]);
       setData({ products: p.data, categories: c.data, customers: cu.data });
+      setBranches(br.data);
     } catch (e) {
       setError(e);
     } finally {
@@ -68,6 +72,15 @@ export default function POSPage() {
   useEffect(() => {
     setReceived("");
   }, [money.display]);
+
+  // Resolve branch: 1) user's assigned branch, 2) auto-select if exactly one branch, 3) leave null for selector
+  useEffect(() => {
+    if (user?.branch_id) {
+      setSelectedBranchId(Number(user.branch_id));
+    } else if (branches.length === 1) {
+      setSelectedBranchId(Number(branches[0].id));
+    }
+  }, [user, branches]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -130,6 +143,7 @@ export default function POSPage() {
 
   const checkout = async () => {
     if (insufficient) return toast.error(t("pos.insufficientPayment"));
+    if (!selectedBranchId) return toast.error(t("pos.noBranch"));
     setPaying(true);
     try {
       const order = await api.checkout({
@@ -137,10 +151,10 @@ export default function POSPage() {
         customer_id: customerId ? Number(customerId) : null,
         discount_percent: discountPct,
         payment_method: method,
-        received: receivedBase,
+        received: method === "cash" ? receivedDisplay : null,
         currency: money.display,
-        exchange_rate: money.rate,
         mode,
+        branch_id: Number(selectedBranchId),
       });
       setCompleted(order);
       setPayOpen(false);
@@ -152,7 +166,12 @@ export default function POSPage() {
       toast.success(t("pos.saleCompletedHint", { number: order.number }));
       load();
     } catch (err) {
-      toast.error(t(errorKey(err)));
+      if (err.status === 422 && err.errors) {
+        const firstError = Object.values(err.errors)[0];
+        toast.error(Array.isArray(firstError) ? firstError[0] : err.message || t(errorKey(err)));
+      } else {
+        toast.error(err.message || t(errorKey(err)));
+      }
     } finally {
       setPaying(false);
     }
@@ -233,6 +252,22 @@ export default function POSPage() {
         )}
       </div>
       <div className="space-y-3 border-t border-border bg-surface-muted/60 p-4">
+        {branches.length > 1 && !user?.branch_id ? (
+          <Select
+            size="sm"
+            value={selectedBranchId ? String(selectedBranchId) : ""}
+            onChange={(e) => setSelectedBranchId(e.target.value ? Number(e.target.value) : null)}
+            placeholder={t("pos.selectBranch")}
+            options={branches.map((b) => ({ value: b.id, label: b.name }))}
+            aria-label={t("pos.selectBranch")}
+          />
+        ) : null}
+        {branches.length === 0 && (
+          <Alert variant="danger">
+            <p className="font-semibold">{t("pos.noBranch")}</p>
+            <p className="mt-1 text-xs">{t("pos.noBranchHint")}</p>
+          </Alert>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <Select size="sm" value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder={t("customers.walkIn")} options={visibleCustomers.map((c) => ({ value: c.id, label: c.type === "wholesale" ? `${c.name} · ${t("common.wholesale")}` : c.name }))} aria-label={t("pos.selectCustomer")} />
           <Input size="sm" type="number" inputMode="decimal" min={0} max={100} value={discount} onChange={(e) => setDiscount(e.target.value)} placeholder={t("pos.discountPercent")} aria-label={t("pos.discountPercent")} />
@@ -270,7 +305,7 @@ export default function POSPage() {
         <Button
           size="lg"
           fullWidth
-          disabled={!cart.length || !can("sales.create")}
+          disabled={!cart.length || !can("sales.create") || !selectedBranchId}
           onClick={() => {
             setReceived(mode === "quick" ? String(displayTotal) : "");
             setMethod("cash");

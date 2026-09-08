@@ -45,6 +45,9 @@ Route::prefix('v1')->group(function () {
             Route::post("$r/bulk-delete", [ResourceController::class, 'bulkDestroy'])->middleware("permission:$r.delete")->defaults('resource', $r);
         }
 
+        // Permissions (read-only list for role assignment UI)
+        Route::get('permissions', fn () => ApiResponse::success(\App\Models\Permission::select('id', 'name', 'group', 'ability')->orderBy('id')->get()))->middleware('permission:roles.view');
+
         // POS / orders
         Route::post('pos/checkout', [PosController::class, 'checkout'])->middleware('permission:sales.create');
         Route::get('orders', [PosController::class, 'index'])->middleware('permission:orders.view,sales.view');

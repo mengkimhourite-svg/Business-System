@@ -1,4 +1,4 @@
-import { ROLE_PERMISSIONS } from "../config/permissions.js";
+import { ROLE_PERMISSIONS, ALL_PERMISSIONS } from "../config/permissions.js";
 
 /* ------------------------------------------------------------------ */
 /* Deterministic pseudo-random generator so demo data is stable        */
@@ -167,6 +167,11 @@ function generate() {
     { id: 5, name: "Sales", slug: "sales", description: "POS, orders and customers.", system: false },
     { id: 6, name: "Inventory", slug: "inventory", description: "Products, purchases and stock control.", system: false },
   ].map((r) => ({ ...r, permissions: [...ROLE_PERMISSIONS[r.slug]], created_at: at(300) }));
+
+  const permissions = ALL_PERMISSIONS.map((name, i) => {
+    const [group, ability] = name.split(".");
+    return { id: i + 1, name, group, ability };
+  });
 
   const userSeed = [
     ["Sokha Chan", "sokha@sbs.com", 1, 1],
@@ -362,6 +367,7 @@ function generate() {
     stock_movements,
     notifications,
     settings,
+    permissions,
   };
 }
 

@@ -93,15 +93,28 @@ class ResourceController extends Controller
     {
         $cfg = $this->cfg($resource);
         $data = $request->validated();
+        // RBAC: admin must not create/assign super-admin
+        if ($resource === 'roles' && isset($data['name']) && \Illuminate\Support\Str::slug($data['name'], '_') === 'super_admin' && $request->user()->role?->slug !== 'super_admin') {
+            return ApiResponse::error('You cannot create a super-admin role.', 403);
+        }
         $model = DB::transaction(function () use ($cfg, $resource, $data, $request) {
-            $permissions = $data['permissions'] ?? null; unset($data['permissions']);
+            $permissionIds = $data['permission_ids'] ?? null; unset($data['permission_ids']);
             $stock = $data['stock'] ?? null; unset($data['stock']);
             if ($resource === 'roles') $data += ['business_id' => $request->user()->business_id, 'slug' => \Illuminate\Support\Str::slug($data['name'], '_')];
             if ($resource === 'users') $data['business_id'] = $request->user()->business_id;
             if ($resource === 'expenses') $data += ['reference' => 'EXP-'.str_pad((string) ((Expense::max('id') ?? 0) + 3001), 5, '0', STR_PAD_LEFT), 'user_id' => $request->user()->id, 'currency' => $request->user()->business->currency, 'exchange_rate' => $request->user()->business->exchange_rate];
             $model = $cfg['model']::create($data);
-            if ($resource === 'roles' && $permissions !== null) $model->permissions()->sync(\App\Models\Permission::whereIn('name', $permissions)->pluck('id'));
-            if ($resource === 'products' && $stock !== null && (float) $stock > 0) $this->inventory->move($model, $request->user()->branch_id, (string) $stock, 'in', 'Opening stock', null, $request->user()->id);
+            if ($resource === 'roles' && $permissionIds !== null) $model->permissions()->sync($permissionIds);
+            if ($resource === 'products' && $stock !== null && (float) $stock > 0) {
+                $branchId = $request->user()->branch_id;
+                if (!$branchId) {
+                    $branch = Branch::where('business_id', $request->user()->business_id)->where('status', 'active')->first();
+                    $branchId = $branch?->id;
+                }
+                if ($branchId) {
+                    $this->inventory->move($model, (int) $branchId, (string) $stock, 'in', 'Opening stock', null, $request->user()->id);
+                }
+            }
             return $model;
         });
         return ApiResponse::success(new ApiResource($this->query($resource, $request)->findOrFail($model->id)), 'Created', 201);
@@ -110,14 +123,18 @@ class ResourceController extends Controller
     public function update(ResourceRequest $request, int $id, string $resource)
     {
         $model = $this->query($resource, $request)->findOrFail($id);
+        // RBAC: admin must not edit Super Admin permissions
+        if ($resource === 'roles' && $model->slug === 'super_admin' && $request->user()->role?->slug !== 'super_admin') {
+            return ApiResponse::error('You cannot edit the Super Admin role.', 403);
+        }
         $data = $request->validated();
         if ($resource === 'roles' && $model->is_system && isset($data['name'])) unset($data['name']);
         if ($resource === 'users' && empty($data['password'])) unset($data['password']);
         unset($data['stock']); // stock changes go through inventory adjustments only
         DB::transaction(function () use ($model, $data, $resource) {
-            $permissions = $data['permissions'] ?? null; unset($data['permissions']);
+            $permissionIds = $data['permission_ids'] ?? null; unset($data['permission_ids']);
             $model->update($data);
-            if ($resource === 'roles' && $permissions !== null) $model->permissions()->sync(\App\Models\Permission::whereIn('name', $permissions)->pluck('id'));
+            if ($resource === 'roles' && $permissionIds !== null) $model->permissions()->sync($permissionIds);
         });
         return ApiResponse::success(new ApiResource($this->query($resource, $request)->findOrFail($id)), 'Updated');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Branch;
 use App\Models\Customer;
 use App\Models\Payment;
 use App\Models\Product;
@@ -24,6 +25,8 @@ class SaleService
         $business = $user->business;
         $branchId = (int) ($data['branch_id'] ?? $user->branch_id);
         if (!$branchId) throw ValidationException::withMessages(['branch_id' => ['A branch is required.']]);
+        $branch = Branch::whereKey($branchId)->where('business_id', $business->id)->where('status', 'active')->first();
+        if (!$branch) throw ValidationException::withMessages(['branch_id' => ['Invalid or inactive branch.']]);
 
         if (!empty($data['idempotency_key'])) {
             $existing = Sale::where('idempotency_key', $data['idempotency_key'])->first();

@@ -21,7 +21,7 @@ class ApiResource extends JsonResource
         if (isset($data['inventory_sum_quantity'])) { $data['stock'] = (float) $data['inventory_sum_quantity']; unset($data['inventory_sum_quantity']); }
         if ($this->resource instanceof \App\Models\Product) { $data['stock'] = (float) ($data['stock'] ?? $this->resource->stock); $data['stock_status'] = $this->resource->stock_status; }
         if ($this->resource->relationLoaded('items')) $data['items_count'] = (float) $this->resource->items->sum('quantity');
-        if ($this->resource->relationLoaded('permissions')) { $data['permissions'] = $this->resource->permissions->pluck('name')->values(); }
+        if ($this->resource->relationLoaded('permissions')) { $data['permissions'] = $this->resource->permissions->pluck('name')->values(); $data['permission_ids'] = $this->resource->permissions->pluck('id')->values(); }
         if (isset($data['users_count'])) $data['users_count'] = (int) $data['users_count'];
         return $data;
     }

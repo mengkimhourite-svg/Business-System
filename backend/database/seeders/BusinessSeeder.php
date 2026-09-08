@@ -59,7 +59,7 @@ class BusinessSeeder extends Seeder
             'admin' => ['Admin', 'Administrative access to the whole system.', true, $all->except(['roles.delete', 'branches.delete'])->values()->all()],
             'manager' => ['Manager', 'Manages products, sales, purchases and reports.', true, $by(['dashboard', 'products', 'categories', 'brands', 'customers', 'suppliers', 'sales', 'orders', 'purchases', 'inventory', 'reports', 'ai'], ['expenses.view', 'expenses.create', 'branches.view'])],
             'accountant' => ['Accountant', 'Finance, expenses and reports.', false, $by(['expenses', 'reports'], ['dashboard.view', 'purchases.view', 'orders.view', 'customers.view', 'suppliers.view', 'ai.view'])],
-            'sales' => ['Sales / Cashier', 'POS, orders and customers.', false, $by(['sales', 'customers'], ['dashboard.view', 'orders.view', 'orders.update', 'products.view', 'categories.view', 'brands.view', 'ai.view'])],
+            'sales' => ['Sales / Cashier', 'POS, orders and customers.', false, $by(['sales', 'customers'], ['dashboard.view', 'orders.view', 'orders.update', 'products.view', 'categories.view', 'brands.view', 'branches.view', 'ai.view'])],
             'inventory' => ['Inventory', 'Products, purchases and stock control.', false, $by(['products', 'categories', 'brands', 'suppliers', 'purchases', 'inventory'], ['dashboard.view', 'reports.view', 'ai.view'])],
             'purchase' => ['Purchase', 'Purchasing and supplier management.', false, $by(['purchases', 'suppliers'], ['dashboard.view', 'products.view', 'inventory.view', 'ai.view'])],
             'warehouse' => ['Warehouse', 'Stock movements and receiving.', false, $by(['inventory'], ['dashboard.view', 'products.view', 'purchases.view', 'purchases.update'])],

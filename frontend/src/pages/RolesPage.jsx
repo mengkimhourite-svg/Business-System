@@ -15,7 +15,7 @@ const roleFormConfig = {
   form: {
     size: "md",
     defaults: {},
-    toPayload: (p, mode) => (mode === "create" ? { ...p, permissions: ["dashboard.view"], system: false } : p),
+    toPayload: (p, mode) => (mode === "create" ? { ...p, permission_ids: [1], system: false } : p),
     sections: [
       {
         fields: [
@@ -42,6 +42,19 @@ export default function RolesPage() {
   const [modal, setModal] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [permNameToId, setPermNameToId] = useState({});
+
+  const loadPermissions = useCallback(async () => {
+    try {
+      const data = await api.list("permissions", { perPage: 500 });
+      const list = Array.isArray(data) ? data : data.data || [];
+      const map = {};
+      list.forEach((p) => { map[p.name] = p.id; });
+      setPermNameToId(map);
+    } catch {
+      // permissions endpoint may not exist yet; fall back to role-based mapping
+    }
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -59,12 +72,18 @@ export default function RolesPage() {
 
   useEffect(() => {
     load();
-  }, [load]);
+    loadPermissions();
+  }, [load, loadPermissions]);
 
   const selected = roles.find((r) => r.id === selectedId);
   useEffect(() => {
     setPerms(selected?.permissions || []);
     setDirty(false);
+    if (selected?.permissions?.length && selected?.permission_ids?.length && Object.keys(permNameToId).length === 0) {
+      const map = {};
+      selected.permissions.forEach((name, i) => { if (selected.permission_ids[i] != null) map[name] = selected.permission_ids[i]; });
+      setPermNameToId((prev) => ({ ...prev, ...map }));
+    }
   }, [selectedId, roles]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canUpdate = can("roles.update");
@@ -88,12 +107,17 @@ export default function RolesPage() {
   const save = async () => {
     setSaving(true);
     try {
-      const updated = await api.update("roles", selected.id, { permissions: perms });
+      const hasMapping = Object.keys(permNameToId).length > 0;
+      const permissionIds = hasMapping ? perms.map((name) => permNameToId[name]).filter(Boolean) : null;
+      const payload = { name: selected.name };
+      if (permissionIds !== null) payload.permission_ids = permissionIds;
+      const updated = await api.update("roles", selected.id, payload);
       setRoles((rs) => rs.map((r) => (r.id === updated.id ? updated : r)));
       toast.success(t("roles.saved"));
       if (user?.role?.id === updated.id) setUser((u) => ({ ...u, permissions: updated.permissions }));
     } catch (err) {
-      toast.error(t(errorKey(err)));
+      const msg = err?.errors ? Object.values(err.errors).flat().join(". ") : null;
+      toast.error(msg || t(errorKey(err)));
     } finally {
       setSaving(false);
     }

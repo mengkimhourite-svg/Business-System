@@ -137,7 +137,7 @@ const enrichers = {
     const role = db.roles.find((r) => r.id === u.role_id);
     return { ...rest, role_name: role?.name ?? null, role_slug: role?.slug ?? null, branch_name: nameOf(db.branches, u.branch_id) };
   },
-  roles: (r, db) => ({ ...r, users_count: db.users.filter((u) => u.role_id === r.id).length }),
+  roles: (r, db) => ({ ...r, users_count: db.users.filter((u) => u.role_id === r.id).length, permission_ids: (r.permissions || []).map((name) => { const p = db.permissions?.find((x) => x.name === name); return p?.id ?? null; }).filter(Boolean) }),
   branches: (b, db) => ({ ...b, users_count: db.users.filter((u) => u.branch_id === b.id).length }),
   orders: (o, db) => ({
     ...o,
@@ -388,7 +388,13 @@ const mockApi = {
       row.password = payload.password || "password";
       row.avatar = payload.avatar || `https://api.dicebear.com/9.x/initials/svg?seed=${encodeURIComponent(row.name)}&backgroundColor=2d4a9e&textColor=ffffff`;
     }
-    if (resource === "roles") row.slug = row.slug || row.name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    if (resource === "roles") {
+      row.slug = row.slug || row.name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+      if (payload.permission_ids) {
+        row.permissions = payload.permission_ids.map((pid) => { const p = db.permissions?.find((x) => x.id === pid); return p?.name ?? null; }).filter(Boolean);
+        delete row.permission_ids;
+      }
+    }
     if (resource === "products" && !row.image) row.image = `https://picsum.photos/seed/sbs-${row.sku || row.id}/96/96`;
     if (["expenses", "orders", "purchases"].includes(resource)) {
       // Persist the exchange rate in force when the transaction was recorded
@@ -408,6 +414,9 @@ const mockApi = {
     const current = db[resource][idx];
     const next = { ...current, ...payload, id: current.id, updated_at: new Date().toISOString() };
     if (resource === "users" && !payload.password) next.password = current.password;
+    if (resource === "roles" && payload.permission_ids) {
+      next.permissions = payload.permission_ids.map((pid) => { const p = db.permissions?.find((x) => x.id === pid); return p?.name ?? null; }).filter(Boolean);
+    }
     db[resource][idx] = next;
     saveDb();
     return clone(enrich(resource, next, db));
