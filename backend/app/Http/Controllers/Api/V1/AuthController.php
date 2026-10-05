@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
+/** User authentication: login, register, logout, profile, password reset. */
 class AuthController extends Controller
 {
     public function login(LoginRequest $request)

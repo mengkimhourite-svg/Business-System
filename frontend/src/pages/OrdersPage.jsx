@@ -8,7 +8,7 @@ import { ResourcePage, DetailList } from "../components/data-display/ResourcePag
 import { StatusBadge } from "../components/data-display/StatusBadge.jsx";
 import { ConfirmDialog, useToast } from "../components/ui/index.js";
 
-export const PAYMENT_LABEL = { cash: "common.cash", card: "common.card", bank_transfer: "common.bankTransfer", qr: "common.qr" };
+export const PAYMENT_LABEL = { cash: "common.cash", card: "common.card", bank_transfer: "common.bankTransfer", qr: "common.qr", khqr: "common.khqr" };
 
 export function OrderDetails({ order, t, fmt }) {
   // Historical amounts always use the exchange rate captured at the time of sale
@@ -114,6 +114,7 @@ export default function OrdersPage() {
       viewSize: "lg",
       canDelete: can("orders.delete"),
       columns: [
+        { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
         {
           key: "number",
           labelKey: "orders.number",

@@ -121,7 +121,7 @@ export function AITable({ block }) {
             {block.rows.map((row, r) => (
               <tr key={r}>
                 {row.map((c, i) => (
-                  <td key={i} className={cn("px-3 py-2 align-middle", i === 0 ? "max-w-[160px] truncate font-medium text-fg" : "whitespace-nowrap text-right text-fg-secondary tabular")}>
+                  <td key={i} className={cn("px-3 py-2 align-middle", i === 0 ? "max-w-40 truncate font-medium text-fg" : "whitespace-nowrap text-right text-fg-secondary tabular")}>
                     {cell(c)}
                   </td>
                 ))}

@@ -72,9 +72,11 @@ export function AIAssistantProvider({ children }) {
       const res = await askAssistant(input, { page: pageContext?.key || null, role: demoRole });
       if (token !== pending.current) return;
       setMessages((m) => [...m, { id: nextId(), role: "assistant", intent: res.intent, blocks: res.blocks, followUps: res.followUps, empty: !res.intent, at: Date.now() }]);
-    } catch {
+    } catch (e) {
       if (token !== pending.current) return;
-      setMessages((m) => [...m, { id: nextId(), role: "assistant", error: true, retry: input, at: Date.now() }]);
+      const errMsg = e?.message || null;
+      const errDetails = e?.errors ? Object.entries(e.errors).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join("; ") : null;
+      setMessages((m) => [...m, { id: nextId(), role: "assistant", error: true, errorMessage: errDetails || errMsg, retry: input, at: Date.now() }]);
     } finally {
       if (token === pending.current) setThinking(false);
     }

@@ -10,8 +10,10 @@ use App\Models\Sale;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
+/** Notifications, global search across products/customers/orders. */
 class MiscController extends Controller
 {
+    /** List recent notifications for the authenticated user. */
     public function notifications(Request $request)
     {
         $list = Notification::where(fn ($q) => $q->whereNull('user_id')->orWhere('user_id', $request->user()->id))->latest()->limit(30)->get()
@@ -19,6 +21,7 @@ class MiscController extends Controller
         return ApiResponse::success($list);
     }
 
+    /** Mark notifications as read. */
     public function markRead(Request $request)
     {
         $ids = $request->input('ids');
@@ -26,6 +29,7 @@ class MiscController extends Controller
         return $this->notifications($request);
     }
 
+    /** Global search across products, customers, and orders by name/sku/phone/number. */
     public function search(Request $request)
     {
         $q = trim((string) $request->validate(['q' => ['required', 'string', 'min:1', 'max:80']])['q']);

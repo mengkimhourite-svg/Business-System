@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
+use App\Services\CurrencyService;
 use App\Services\InventoryService;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
@@ -28,17 +29,24 @@ class PurchaseController extends Controller
 
     public function show(int $id) { return ApiResponse::success($this->serialize(Purchase::with('supplier', 'items')->findOrFail($id))); }
 
-    public function store(Request $request)
+    public function store(Request $request, CurrencyService $currency)
     {
         $data = $request->validate([
             'supplier_id' => ['required', 'integer'], 'branch_id' => ['nullable', 'integer'], 'expected_at' => ['nullable', 'date'], 'payment_status' => ['nullable', 'in:paid,unpaid,partial'], 'note' => ['nullable', 'string', 'max:500'],
             'items' => ['required', 'array', 'min:1'], 'items.*.product_id' => ['required', 'integer'], 'items.*.qty' => ['required', 'numeric', 'gt:0'], 'items.*.cost' => ['required', 'numeric', 'min:0'],
         ]);
         $user = $request->user();
-        $purchase = DB::transaction(function () use ($data, $user) {
+        $b = $user->business;
+        $purchase = DB::transaction(function () use ($data, $user, $b, $currency) {
             $total = '0.00'; $lines = [];
+
+            // Batch fetch all products at once instead of one-by-one
+            $productIds = array_column($data['items'], 'product_id');
+            $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
             foreach ($data['items'] as $it) {
-                $p = Product::findOrFail($it['product_id']);
+                $p = $products->get($it['product_id']);
+                if (!$p) abort(422, "Product #{$it['product_id']} not found.");
                 $line = number_format(round($it['qty'] * $it['cost'], 2), 2, '.', '');
                 $total = bcadd($total, $line, 2);
                 $lines[] = ['product' => $p, 'qty' => $it['qty'], 'cost' => $it['cost'], 'line' => $line];
@@ -46,7 +54,7 @@ class PurchaseController extends Controller
             $purchase = Purchase::create([
                 'branch_id' => $data['branch_id'] ?? $user->branch_id, 'supplier_id' => $data['supplier_id'], 'user_id' => $user->id,
                 'number' => 'PO-'.str_pad((string) ((Purchase::withoutGlobalScopes()->where('business_id', $user->business_id)->max('id') ?? 0) + 5001), 4, '0', STR_PAD_LEFT),
-                'total' => $total, 'currency' => $user->business->currency, 'exchange_rate' => $user->business->exchange_rate,
+                'total' => $total, 'currency' => $b->currency, 'exchange_rate' => $b->exchange_rate,
                 'status' => 'ordered', 'payment_status' => $data['payment_status'] ?? 'unpaid', 'expected_at' => $data['expected_at'] ?? null, 'note' => $data['note'] ?? null,
             ]);
             foreach ($lines as $l) PurchaseItem::create(['purchase_id' => $purchase->id, 'product_id' => $l['product']->id, 'name' => $l['product']->name, 'sku' => $l['product']->sku, 'quantity' => $l['qty'], 'unit_cost' => $l['cost'], 'line_total' => $l['line']]);

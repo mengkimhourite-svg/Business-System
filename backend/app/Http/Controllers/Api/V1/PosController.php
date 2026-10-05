@@ -9,21 +9,22 @@ use App\Services\SaleService;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
+/** Point of sale: checkout, order management, order status updates. */
 class PosController extends Controller
 {
     public function __construct(private SaleService $sales) {}
 
-    /** POST /pos/checkout — server recomputes totals, updates inventory, records payment (DB::transaction). */
+    /** Process a POS checkout — recomputes totals server-side, updates inventory, records payment. */
     public function checkout(CheckoutRequest $request)
     {
         $sale = $this->sales->checkout($request->user(), $request->validated());
         return ApiResponse::success($this->receipt($sale), 'Sale completed', 201);
     }
 
-    /** GET /orders — sales list with filters (status, payment_status, from, to, search). */
+    /** List orders with filters: status, payment_status, date range, search. */
     public function index(Request $request)
     {
-        $q = Sale::with('customer:id,name', 'user:id,name', 'branch:id,name', 'items');
+        $q = Sale::with('customer:id,name', 'user:id,name', 'branch:id,name', 'items:id,sale_id,product_id,name,sku,quantity,unit_price,unit_cost,line_total');
         if ($s = trim((string) $request->query('search'))) $q->where(fn ($w) => $w->where('number', 'like', "%$s%")->orWhereHas('customer', fn ($c) => $c->where('name', 'like', "%$s%")));
         foreach (['status', 'payment_status', 'branch_id', 'customer_id'] as $f) if (($v = $request->query($f)) && $v !== 'all') $q->where($f, $v);
         if ($from = $request->query('from')) $q->whereDate('created_at', '>=', $from);
@@ -38,7 +39,7 @@ class PosController extends Controller
         return ApiResponse::success($this->receipt(Sale::with('customer', 'user', 'branch', 'items', 'payments')->findOrFail($id)));
     }
 
-    /** PATCH /orders/{id} — status / payment status; cancelling restores stock. */
+    /** Update order status or payment status. Cancelling restores stock. */
     public function update(Request $request, int $id)
     {
         $data = $request->validate(['status' => ['nullable', 'in:pending,completed,cancelled'], 'payment_status' => ['nullable', 'in:paid,unpaid,partial,refunded']]);

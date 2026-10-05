@@ -11,11 +11,12 @@ use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/** Inventory movements, stock adjustments, and low-stock alerts. */
 class InventoryController extends Controller
 {
     public function __construct(private InventoryService $inventory) {}
 
-    /** GET /inventory/movements */
+    /** List inventory movements with search, type filter, product filter, date range. */
     public function movements(Request $request)
     {
         $q = InventoryMovement::with('product:id,name,sku,image', 'user:id,name');
@@ -29,7 +30,7 @@ class InventoryController extends Controller
         return ApiResponse::paginated($page);
     }
 
-    /** POST /inventory/adjust */
+    /** Manually adjust stock for a product (in or out). */
     public function adjust(Request $request)
     {
         $data = $request->validate(['product_id' => ['required', 'integer'], 'type' => ['required', 'in:in,out'], 'qty' => ['required', 'numeric', 'gt:0'], 'reason' => ['nullable', 'string', 'max:255'], 'branch_id' => ['nullable', 'integer']]);
@@ -39,10 +40,17 @@ class InventoryController extends Controller
         return ApiResponse::success(new ApiResource(Product::withSum('inventory as stock', 'quantity')->findOrFail($product->id)), 'Stock adjusted');
     }
 
-    /** GET /inventory/low-stock */
+    /** List products with stock at or below reorder level. */
     public function lowStock()
     {
-        $items = Product::where('status', 'active')->withSum('inventory as stock', 'quantity')->get()->filter(fn ($p) => (float) $p->stock <= (float) $p->reorder_level)->sortBy('stock')->values();
+        $sub = 'SELECT product_id, COALESCE(SUM(quantity),0) as stock FROM inventory GROUP BY product_id';
+        $items = Product::where('products.status', 'active')
+            ->select('products.*')
+            ->selectRaw('COALESCE(inv.stock,0) as stock')
+            ->leftJoinSub($sub, 'inv', 'inv.product_id', '=', 'products.id')
+            ->whereRaw('COALESCE(inv.stock,0) <= products.reorder_level')
+            ->orderBy('stock')
+            ->get();
         return ApiResponse::success(ApiResource::collection($items));
     }
 }

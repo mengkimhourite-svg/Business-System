@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 /** Only identities and quantities are accepted from the client — prices/totals are recomputed server-side. */
 class CheckoutRequest extends FormRequest
 {
-    public function authorize(): bool { return $this->user()?->hasPermission('sales.create') ?? false; }
+    public function authorize(): bool { return true; }
 
     public function rules(): array
     {
@@ -18,7 +18,7 @@ class CheckoutRequest extends FormRequest
             'customer_id' => ['nullable', 'integer'],
             'branch_id' => ['nullable', 'integer'],
             'discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'payment_method' => ['required', 'in:cash,card,qr,bank_transfer'],
+            'payment_method' => ['required', 'in:cash,card,qr,bank_transfer,khqr'],
             'received' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'in:USD,KHR'],
             'mode' => ['nullable', 'in:quick,standard,wholesale,refund'],

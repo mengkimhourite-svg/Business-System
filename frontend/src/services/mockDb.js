@@ -13,7 +13,7 @@ function mulberry32(a) {
   };
 }
 
-const DB_KEY = "sbs.mockdb.v5";
+const DB_KEY = "sbs.mockdb.v8";
 const SEED_RATE = 4047; // KHR per USD at seed time
 const MAX_AGE_MS = 1000 * 60 * 60 * 20; // regenerate daily so date ranges stay meaningful
 
@@ -46,12 +46,12 @@ function generate() {
   const catId = (name) => categories.find((c) => c.name === name).id;
 
   const suppliers = [
-    ["Cambodia Beverage Co.", "Sok Dara", "sales@cambev.com.kh", "+855 23 456 789", "St. 271, Phnom Penh"],
-    ["Phnom Penh Fresh Foods", "Chan Sophea", "orders@ppfresh.com", "+855 12 890 123", "Toul Kork, Phnom Penh"],
-    ["Mekong Electronics Ltd.", "Kim Vanna", "b2b@mekongelec.com", "+855 17 222 333", "Russian Blvd, Phnom Penh"],
-    ["Angkor Household Supplies", "Heng Piseth", "contact@angkorhs.com", "+855 92 444 555", "Siem Reap"],
-    ["Khmer Care Distribution", "Ly Sreyneang", "info@khmercare.com", "+855 96 777 888", "Chbar Ampov, Phnom Penh"],
-    ["Office Pro Cambodia", "Meas Chantha", "hello@officepro.kh", "+855 11 999 000", "BKK1, Phnom Penh"],
+    ["Cambodia Beverage Co.", "Sok Dara", "sales@cambev.com.kh", "855 23 456 789", "St. 271, Phnom Penh"],
+    ["Phnom Penh Fresh Foods", "Chan Sophea", "orders@ppfresh.com", "855 12 890 123", "Toul Kork, Phnom Penh"],
+    ["Mekong Electronics Ltd.", "Kim Vanna", "b2b@mekongelec.com", "855 17 222 333", "Russian Blvd, Phnom Penh"],
+    ["Angkor Household Supplies", "Heng Piseth", "contact@angkorhs.com", "855 92 444 555", "Siem Reap"],
+    ["Khmer Care Distribution", "Ly Sreyneang", "info@khmercare.com", "855 96 777 888", "Chbar Ampov, Phnom Penh"],
+    ["Office Pro Cambodia", "Meas Chantha", "hello@officepro.kh", "855 11 999 000", "BKK1, Phnom Penh"],
   ].map(([name, contact_name, email, phone, address], i) => ({
     id: i + 1,
     name,
@@ -89,6 +89,22 @@ function generate() {
     ["Head & Shoulders 330ml", "Personal Care", "P&G", 5, 3.4, 5.2, 8, 10, "bottle"],
     ["Pilot G2 Gel Pen Black", "Stationery", "Pilot", 6, 0.9, 1.5, 150, 40, "pcs"],
     ["Double A Copy Paper A4", "Stationery", "Double A", 6, 3.6, 5.2, 45, 20, "ream"],
+    ["Pepsi 330ml", "Beverages", "Pepsi", 1, 0.35, 0.6, 200, 48, "can"],
+    ["KitKat 4 Finger 40g", "Snacks", "KitKat", 2, 0.8, 1.3, 50, 20, "pack"],
+    ["Milo 200ml", "Beverages", "Nestle", 1, 0.4, 0.7, 80, 30, "pack"],
+    ["Sharpie Marker Black", "Stationery", "Sharpie", 6, 1.5, 2.5, 60, 15, "pcs"],
+    ["HP Printer Paper A4", "Stationery", "HP", 6, 4.0, 6.0, 35, 15, "ream"],
+    ["Samsung Galaxy Buds FE", "Electronics", "Samsung", 3, 55, 79.9, 12, 5, "pcs"],
+    ["Sprite 330ml", "Beverages", "Coca-Cola", 1, 0.35, 0.6, 180, 48, "can"],
+    ["Doritos Nacho 150g", "Snacks", "Lay's", 2, 1.1, 1.7, 45, 20, "pack"],
+    ["Mozzarella Cheese 200g", "Dairy", "President", 2, 2.8, 4.0, 15, 10, "pack"],
+    ["Chocolate Muffin", "Bakery", "House Bakery", 2, 0.6, 1.2, 18, 12, "pcs"],
+    ["Logitech M185 Mouse", "Electronics", "Logitech", 3, 9, 14.9, 25, 8, "pcs"],
+    ["Dettol Hand Soap 500ml", "Personal Care", "Dettol", 5, 2.0, 3.2, 40, 15, "bottle"],
+    ["Bic Ballpoint Pen 10pk", "Stationery", "Bic", 6, 1.8, 3.0, 100, 30, "pack"],
+    ["Kiwi Shoe Polish", "Household", "Kiwi", 4, 1.5, 2.5, 30, 10, "pcs"],
+    ["Nescafe Classic 200g", "Beverages", "Nestle", 1, 4.5, 7.0, 50, 15, "pack"],
+    ["Indomie Goreng 5pk", "Snacks", "Indomie", 2, 1.8, 2.8, 120, 40, "pack"],
   ];
 
   const brandNames = [...new Set(productSeed.map((p) => p[2]))];
@@ -146,7 +162,7 @@ function generate() {
     id: i + 1,
     name,
     email: `${name.toLowerCase().replace(/\s+/g, ".")}@example.com`,
-    phone: `+855 ${rand(10, 99)} ${rand(100, 999)} ${rand(100, 999)}`,
+    phone: `855 ${rand(10, 99)} ${rand(100, 999)} ${rand(100, 999)}`,
     address: pick(["Phnom Penh", "Siem Reap", "Battambang", "Kampong Cham", "Sihanoukville"]),
     type,
     status: i === 13 ? "inactive" : "active",
@@ -154,9 +170,9 @@ function generate() {
   }));
 
   const branches = [
-    { id: 1, name: "Phnom Penh Main", code: "PP-01", address: "St. 63, BKK1, Phnom Penh", phone: "+855 23 111 222", manager: "Vanna Ly", status: "active", created_at: at(365) },
-    { id: 2, name: "Siem Reap", code: "SR-01", address: "Sivatha Blvd, Siem Reap", phone: "+855 63 333 444", manager: "Malis Nguon", status: "active", created_at: at(240) },
-    { id: 3, name: "Battambang", code: "BB-01", address: "Road 3, Battambang", phone: "+855 53 555 666", manager: "—", status: "inactive", created_at: at(120) },
+    { id: 1, name: "Phnom Penh Main", code: "PP-01", address: "St. 63, BKK1, Phnom Penh", phone: "855 23 111 222", manager: "Vanna Ly", status: "active", created_at: at(365) },
+    { id: 2, name: "Siem Reap", code: "SR-01", address: "Sivatha Blvd, Siem Reap", phone: "855 63 333 444", manager: "Malis Nguon", status: "active", created_at: at(240) },
+    { id: 3, name: "Battambang", code: "BB-01", address: "Road 3, Battambang", phone: "855 53 555 666", manager: "—", status: "inactive", created_at: at(120) },
   ];
 
   const roles = [
@@ -166,7 +182,11 @@ function generate() {
     { id: 4, name: "Accountant", slug: "accountant", description: "Finance, expenses and reports.", system: false },
     { id: 5, name: "Sales", slug: "sales", description: "POS, orders and customers.", system: false },
     { id: 6, name: "Inventory", slug: "inventory", description: "Products, purchases and stock control.", system: false },
-  ].map((r) => ({ ...r, permissions: [...ROLE_PERMISSIONS[r.slug]], created_at: at(300) }));
+    { id: 7, name: "Purchase", slug: "purchase", description: "Purchasing and supplier management.", system: false },
+    { id: 8, name: "Warehouse", slug: "warehouse", description: "Stock movements and receiving.", system: false },
+    { id: 9, name: "Customer Service", slug: "customer_service", description: "Customers and order support.", system: false },
+    { id: 10, name: "Auditor", slug: "auditor", description: "Read-only access to financial data.", system: false },
+  ].map((r) => ({ ...r, permissions: [...(ROLE_PERMISSIONS[r.slug] || [])], created_at: at(300) }));
 
   const permissions = ALL_PERMISSIONS.map((name, i) => {
     const [group, ability] = name.split(".");
@@ -187,7 +207,7 @@ function generate() {
     id: i + 1,
     name,
     email,
-    phone: `+855 ${rand(10, 99)} ${rand(100, 999)} ${rand(100, 999)}`,
+    phone: `855 ${rand(10, 99)} ${rand(100, 999)} ${rand(100, 999)}`,
     role_id,
     branch_id,
     status: i === 7 ? "inactive" : "active",
@@ -337,7 +357,7 @@ function generate() {
     business_subtitle: "Smart Business System",
     business_logo: "",
     business_email: "hello@angkormart.com",
-    business_phone: "+855 23 900 100",
+    business_phone: "855 23 900 100",
     business_address: "St. 63, BKK1, Phnom Penh, Cambodia",
     base_currency: "USD",
     currency: "USD",

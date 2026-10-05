@@ -22,7 +22,7 @@ function buildUrl(path, params) {
   return url.toString();
 }
 
-export async function request(method, path, { body, params, headers, raw = false, timeout = 20000 } = {}) {
+export async function request(method, path, { body, params, headers, raw = false, timeout = 30000 } = {}) {
   const url = buildUrl(path, params);
   const key = method === "GET" ? url : null;
   if (key && inflight.has(key)) return inflight.get(key);

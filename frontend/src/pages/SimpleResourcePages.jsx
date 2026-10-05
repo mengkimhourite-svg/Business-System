@@ -1,4 +1,4 @@
-import { Tags, BadgeCheck, Truck, Users, Building2, ExternalLink } from "lucide-react";
+import { Tags, BadgeCheck, Truck, Users, Building2, ExternalLink, Phone } from "lucide-react";
 import { ResourcePage } from "../components/data-display/ResourcePage.jsx";
 import { StatusBadge } from "../components/data-display/StatusBadge.jsx";
 import { Avatar, Badge } from "../components/ui/index.js";
@@ -22,6 +22,7 @@ export const categoriesConfig = {
   emptyHintKey: "categories.emptyHint",
   icon: Tags,
   columns: [
+    { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
     {
       key: "name",
       labelKey: "common.name",
@@ -68,17 +69,18 @@ export const brandsConfig = {
   emptyHintKey: "brands.emptyHint",
   icon: BadgeCheck,
   columns: [
+    { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
     {
       key: "name",
       labelKey: "common.name",
       primary: true,
       sortable: true,
-      render: (r) => (
-        <div className="flex items-center gap-3">
-          <Avatar src={r.logo} name={r.name} size="sm" shape="square" />
-          <p className="truncate font-medium text-fg">{r.name}</p>
-        </div>
-      ),
+      render: (r) => <p className="truncate font-medium text-fg">{r.name}</p>,
+    },
+    {
+      key: "logo",
+      labelKey: "common.image",
+      render: (r) => <Avatar src={r.logo} name={r.name} size="sm" shape="square" />,
     },
     {
       key: "website",
@@ -126,6 +128,7 @@ export const suppliersConfig = {
   emptyHintKey: "suppliers.emptyHint",
   icon: Truck,
   columns: [
+    { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
     {
       key: "name",
       labelKey: "common.name",
@@ -139,7 +142,7 @@ export const suppliersConfig = {
       ),
     },
     { key: "email", labelKey: "common.email", render: (r) => <span className="text-fg-secondary">{r.email}</span> },
-    { key: "phone", labelKey: "common.phone", render: (r) => <span className="tabular">{r.phone}</span> },
+    { key: "phone", labelKey: "common.phone", render: (r) => <span className="inline-flex items-center gap-1.5 tabular"><Phone className="h-3.5 w-3.5 text-fg-muted" />{r.phone}</span> },
     { key: "products_count", labelKey: "categories.productsCount", sortable: true, align: "right", hideOnMobile: true, render: (r) => <span className="tabular">{r.products_count}</span> },
     statusCol,
   ],
@@ -181,22 +184,20 @@ export const customersConfig = {
   emptyHintKey: "customers.emptyHint",
   icon: Users,
   columns: [
+    { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
     {
       key: "name",
       labelKey: "common.name",
       primary: true,
       sortable: true,
-      render: (r) => (
-        <div className="flex items-center gap-3">
-          <Avatar name={r.name} size="sm" />
-          <div className="min-w-0">
-            <p className="truncate font-medium text-fg">{r.name}</p>
-            <p className="truncate text-xs text-fg-muted">{r.email}</p>
-          </div>
-        </div>
-      ),
+      render: (r) => <p className="truncate font-medium text-fg">{r.name}</p>,
     },
-    { key: "phone", labelKey: "common.phone", render: (r) => <span className="tabular">{r.phone}</span> },
+    {
+      key: "image",
+      labelKey: "common.image",
+      render: (r) => <Avatar name={r.name} size="sm" />,
+    },
+    { key: "phone", labelKey: "common.phone", render: (r) => <span className="inline-flex items-center gap-1.5 tabular"><Phone className="h-3.5 w-3.5 text-fg-muted" />{r.phone}</span> },
     { key: "type", labelKey: "common.type", sortable: true, align: "center", render: (r, { t }) => <Badge variant={r.type === "wholesale" ? "primary" : "neutral"}>{t(`common.${r.type}`)}</Badge> },
     { key: "orders_count", labelKey: "customers.ordersCount", sortable: true, align: "right", render: (r) => <span className="tabular">{r.orders_count}</span> },
     { key: "total_spent", labelKey: "customers.totalSpent", sortable: true, align: "right", render: (r, { fmt }) => <span className="font-medium tabular">{fmt.currency(r.total_spent)}</span> },
@@ -260,6 +261,7 @@ export const branchesConfig = {
   emptyHintKey: "branches.emptyHint",
   icon: Building2,
   columns: [
+    { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
     {
       key: "name",
       labelKey: "common.name",
@@ -273,7 +275,7 @@ export const branchesConfig = {
       ),
     },
     { key: "address", labelKey: "common.address", render: (r) => <span className="text-fg-secondary">{r.address}</span> },
-    { key: "phone", labelKey: "common.phone", hideOnMobile: true, render: (r) => <span className="tabular">{r.phone}</span> },
+    { key: "phone", labelKey: "common.phone", hideOnMobile: true, render: (r) => <span className="inline-flex items-center gap-1.5 tabular"><Phone className="h-3.5 w-3.5 text-fg-muted" />{r.phone}</span> },
     { key: "manager", labelKey: "common.manager" },
     { key: "users_count", labelKey: "nav.users", align: "right", render: (r) => <span className="tabular">{r.users_count}</span> },
     statusCol,

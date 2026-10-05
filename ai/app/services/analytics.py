@@ -1,4 +1,4 @@
-"""Rule-based business analytics. Always available; the provider (LLM) only enriches the summary text."""
+"""Business analytics: rule-based engine + real LLM chat via provider."""
 from __future__ import annotations
 from datetime import date, timedelta
 from typing import Iterable
@@ -8,6 +8,7 @@ from app.schemas.requests import (
     AnomalyDetectionRequest, ChatRequest, CustomerAnalysisRequest, DailyPoint,
     InventoryPredictionRequest, ProductStat, RecommendationsRequest, SalesPredictionRequest,
 )
+from app.services.provider import chat_completion, ProviderError
 from app.utils.stats import linear_forecast, mean, pct_change, round2, zscores
 
 
@@ -200,13 +201,26 @@ def detect_intent(message: str | None, explicit: str | None) -> str | None:
     return None
 
 
-def chat(req: ChatRequest) -> Insight:
-    """Route a chat message to the matching analysis, keeping the user's detected intent on the answer."""
-    intent = detect_intent(req.message, req.intent)
-    ins = _chat_route(req, intent)
-    if intent and ins.intent is not None:
-        ins.intent = intent
-    return ins
+async def chat(req: ChatRequest) -> Insight:
+    """Try the real LLM first; fall back to rule-based routing if unavailable."""
+    language = req.context.language or "en"
+
+    try:
+        text = await chat_completion(req, language)
+        return Insight(
+            intent=detect_intent(req.message, req.intent),
+            title="SmartBiz AI",
+            summary=text,
+            follow_ups=["expenses", "low_stock", "top_products", "performance"],
+            confidence=0.9,
+            source="provider",
+        )
+    except ProviderError:
+        intent = detect_intent(req.message, req.intent)
+        ins = _chat_route(req, intent)
+        if intent and ins.intent is not None:
+            ins.intent = intent
+        return ins
 
 
 def _chat_route(req: ChatRequest, intent: str | None) -> Insight:

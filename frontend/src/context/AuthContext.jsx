@@ -7,6 +7,22 @@ import { useI18n } from "../i18n/index.jsx";
 
 const AuthContext = createContext(null);
 
+const SUPER_ADMIN_SLUGS = new Set(["super_admin", "super-admin"]);
+
+function isSuperAdmin(user) {
+  if (!user) return false;
+  if (SUPER_ADMIN_SLUGS.has(user?.role?.slug)) return true;
+  const perms = user?.permissions;
+  if (Array.isArray(perms) && perms.includes("*")) return true;
+  return false;
+}
+
+function normalizeUser(raw) {
+  if (!raw) return raw;
+  const perms = Array.isArray(raw.permissions) ? raw.permissions : [];
+  return { ...raw, permissions: perms };
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
@@ -22,7 +38,7 @@ export function AuthProvider({ children }) {
       if (tokenStore.get()) {
         try {
           const me = await api.me();
-          if (active) setUser(me);
+          if (active) setUser(normalizeUser(me));
         } catch {
           tokenStore.clear();
         }
@@ -49,7 +65,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (credentials) => {
     const result = await api.login(credentials);
     await hydratePreferences();
-    setUser(result.user);
+    setUser(normalizeUser(result.user));
     return result.user;
   }, []);
 
@@ -58,7 +74,14 @@ export function AuthProvider({ children }) {
     await api.logout();
   }, []);
 
-  const can = useCallback((permission) => hasPermission(user?.permissions || [], permission), [user]);
+  const can = useCallback(
+    (permission) => {
+      if (isSuperAdmin(user)) return true;
+      const perms = user?.permissions || [];
+      return hasPermission(perms, permission);
+    },
+    [user],
+  );
 
   // Let other providers (settings) react to authentication changes
   useEffect(() => {

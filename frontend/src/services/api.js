@@ -89,7 +89,7 @@ export function rangeBounds(range = "last30", { from, to } = {}) {
 /* Mock implementation                                                  */
 /* ------------------------------------------------------------------ */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const latency = () => sleep(160 + Math.random() * 240);
+const latency = () => sleep(10);
 const clone = (v) => JSON.parse(JSON.stringify(v));
 const round2 = (n) => Math.round(n * 100) / 100;
 const nameOf = (table, id) => table.find((r) => r.id === Number(id))?.name ?? null;
@@ -182,7 +182,7 @@ function enrich(resource, row, db) {
   return enrichers[resource] ? enrichers[resource](row, db) : { ...row };
 }
 
-function applyQuery(resource, rows, params = {}) {
+function applyQuery(resource, rows, params = {}, enrichResource = null) {
   const { page = 1, perPage = 10, search = "", sort, filters = {} } = params;
   let list = rows;
 
@@ -219,7 +219,10 @@ function applyQuery(resource, rows, params = {}) {
   const total = list.length;
   const size = Math.max(1, Number(perPage) || 10);
   const from = (Math.max(1, page) - 1) * size;
-  return { data: clone(list.slice(from, from + size)), total, page: Number(page) || 1, perPage: size };
+  const db = loadDb();
+  const paged = list.slice(from, from + size);
+  const enriched = enrichResource ? paged.map((r) => enrich(enrichResource, r, db)) : paged;
+  return { data: clone(enriched), total, page: Number(page) || 1, perPage: size };
 }
 
 function sanitizeUser(u, db) {
@@ -297,7 +300,6 @@ const mockApi = {
     return { token, user: this._profile(user, db) };
   },
   async me() {
-    await sleep(80);
     requireAuth();
     const db = loadDb();
     const user = authUser(db);
@@ -312,7 +314,6 @@ const mockApi = {
     return { ...sanitizeUser(user, db), role: role ? { id: role.id, name: role.name, slug: role.slug } : null, permissions: role?.permissions ?? [] };
   },
   async updateProfile(payload = {}) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const user = authUser(db);
@@ -348,7 +349,6 @@ const mockApi = {
     return true;
   },
   async changePassword({ current_password, new_password }) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const user = authUser(db);
@@ -360,15 +360,12 @@ const mockApi = {
 
   /* ---- generic CRUD ---- */
   async list(resource, params) {
-    await latency();
     requireAuth();
     const db = loadDb();
     if (!db[resource]) throw new ApiError(404, "Not found");
-    const rows = db[resource].map((r) => enrich(resource, r, db));
-    return applyQuery(resource, rows, params);
+    return applyQuery(resource, db[resource], params, resource);
   },
   async get(resource, id) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const row = db[resource]?.find((r) => String(r.id) === String(id));
@@ -376,7 +373,6 @@ const mockApi = {
     return clone(enrich(resource, row, db));
   },
   async create(resource, payload) {
-    await latency();
     requireAuth();
     const db = loadDb();
     if (!db[resource]) throw new ApiError(404, "Not found");
@@ -406,7 +402,6 @@ const mockApi = {
     return clone(enrich(resource, row, db));
   },
   async update(resource, id, payload) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const idx = db[resource]?.findIndex((r) => String(r.id) === String(id));
@@ -422,7 +417,6 @@ const mockApi = {
     return clone(enrich(resource, next, db));
   },
   async remove(resource, id) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const row = db[resource]?.find((r) => String(r.id) === String(id));
@@ -434,7 +428,6 @@ const mockApi = {
     return true;
   },
   async bulkRemove(resource, ids) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const set = new Set(ids.map(String));
@@ -446,7 +439,6 @@ const mockApi = {
 
   /* ---- dashboard ---- */
   async dashboard({ range = "last30", from, to } = {}) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const { start, end, prevStart, prevEnd, mode } = rangeBounds(range, { from, to });
@@ -504,7 +496,6 @@ const mockApi = {
 
   /* ---- reports ---- */
   async reports({ range = "last30", from, to } = {}) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const { start, end, mode } = rangeBounds(range, { from, to });
@@ -690,7 +681,6 @@ const mockApi = {
 
   /* ---- POS ---- */
   async checkout({ items, customer_id, discount_percent = 0, payment_method = "cash", received, currency, exchange_rate }) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const me = authUser(db);
@@ -740,7 +730,6 @@ const mockApi = {
   },
 
   async updateOrder(id, { status, payment_status }) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const order = db.orders.find((o) => String(o.id) === String(id));
@@ -763,7 +752,6 @@ const mockApi = {
   },
 
   async createPurchase(payload) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const items = (payload.items || []).map((it) => {
@@ -794,7 +782,6 @@ const mockApi = {
   },
 
   async receivePurchase(id) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const purchase = db.purchases.find((p) => String(p.id) === String(id));
@@ -814,7 +801,6 @@ const mockApi = {
   },
 
   async adjustStock({ product_id, type, qty, reason }) {
-    await latency();
     requireAuth();
     const db = loadDb();
     const p = db.products.find((x) => String(x.id) === String(product_id));
@@ -830,18 +816,15 @@ const mockApi = {
 
   /* ---- settings & notifications ---- */
   async getPublicSettings() {
-    await sleep(60);
     const s = loadDb().settings;
     // Branding/currency only — never expose anything sensitive before login
     return clone({ business_name: s.business_name, business_subtitle: s.business_subtitle, business_logo: s.business_logo, currency: s.currency, exchange_rate: s.exchange_rate, tax_rate: s.tax_rate });
   },
   async getSettings() {
-    await sleep(120);
     requireAuth();
     return clone(loadDb().settings);
   },
   async updateSettings(payload) {
-    await latency();
     requireAuth();
     const db = loadDb();
     db.settings = { ...db.settings, ...payload };
@@ -849,12 +832,10 @@ const mockApi = {
     return clone(db.settings);
   },
   async notifications() {
-    await sleep(120);
     requireAuth();
     return clone(loadDb().notifications);
   },
   async markNotificationsRead(ids) {
-    await sleep(100);
     requireAuth();
     const db = loadDb();
     db.notifications.forEach((n) => {
@@ -864,7 +845,6 @@ const mockApi = {
     return clone(db.notifications);
   },
   async globalSearch(q) {
-    await sleep(150);
     requireAuth();
     const db = loadDb();
     const s = q.toLowerCase();
@@ -875,7 +855,6 @@ const mockApi = {
     };
   },
   async resetDemo() {
-    await sleep(300);
     resetDb();
     return true;
   },
@@ -943,6 +922,11 @@ const httpApi = {
   getPublicSettings: () => http.get("/settings/public"),
   getSettings: () => http.get("/settings"),
   updateSettings: (payload) => http.put("/settings", payload),
+  uploadKhqrImage: (file) => {
+    const formData = new FormData();
+    formData.append("khqr_image", file);
+    return http.post("/settings/khqr-image", formData);
+  },
   getPreferences: () => http.get("/preferences"),
   updatePreference: (key, value) => http.put(`/preferences/${key}`, { value }),
   resetPreference: (key) => http.delete(`/preferences/${key}`),

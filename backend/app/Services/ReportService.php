@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class ReportService
@@ -15,6 +16,13 @@ class ReportService
     public function __construct(private PeriodService $period) {}
 
     public function overview(string $range, ?string $from, ?string $to): array
+    {
+        $cacheKey = "reports:overview:{$range}:{$from}:{$to}";
+
+        return Cache::remember($cacheKey, 60, fn () => $this->compute($range, $from, $to));
+    }
+
+    private function compute(string $range, ?string $from, ?string $to): array
     {
         $b = $this->period->bounds($range, $from, $to);
         $sales = Sale::where('sales.status', '!=', 'cancelled')->whereBetween('sales.created_at', [$b['start'], $b['end']]);
@@ -24,10 +32,23 @@ class ReportService
         $expenses = Expense::where('status', '!=', 'rejected')->whereBetween('date', [$b['start']->toDateString(), $b['end']->toDateString()]);
         $expTotal = (float) (clone $expenses)->sum('amount');
         $fmt = $b['mode'] === 'month' ? '%Y-%m' : ($b['mode'] === 'hour' ? '%Y-%m-%dT%H' : '%Y-%m-%d');
-        $series = (clone $sales)->selectRaw("DATE_FORMAT(sales.created_at, '$fmt') d, SUM(total) revenue, COUNT(*) orders")->groupBy('d')->orderBy('d')->get()->map(function ($r) use ($fmt) {
-            $cogs = (float) SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')->whereRaw("DATE_FORMAT(sales.created_at, '$fmt') = ?", [$r->d])->where('sales.status', '!=', 'cancelled')->selectRaw('COALESCE(SUM(quantity*unit_cost),0) v')->value('v');
-            return ['date' => $r->d, 'revenue' => round((float) $r->revenue, 2), 'orders' => (int) $r->orders, 'cogs' => round($cogs, 2), 'profit' => round((float) $r->revenue - $cogs, 2)];
-        });
+
+        $saleIds = (clone $sales)->select('id')->pluck('id');
+        $cogsByDate = SaleItem::join('sales', 'sales.id', '=', 'sale_items.sale_id')
+            ->where('sales.status', '!=', 'cancelled')
+            ->whereIn('sale_items.sale_id', $saleIds)
+            ->selectRaw("DATE_FORMAT(sales.created_at, '$fmt') d, COALESCE(SUM(quantity*unit_cost),0) v")
+            ->groupBy('d')
+            ->pluck('v', 'd')
+            ->map(fn ($v) => (float) $v);
+
+        $series = (clone $sales)
+            ->selectRaw("DATE_FORMAT(sales.created_at, '$fmt') d, SUM(total) revenue, COUNT(*) orders")
+            ->groupBy('d')->orderBy('d')->get()
+            ->map(function ($r) use ($cogsByDate) {
+                $cogsVal = $cogsByDate[$r->d] ?? 0;
+                return ['date' => $r->d, 'revenue' => round((float) $r->revenue, 2), 'orders' => (int) $r->orders, 'cogs' => round($cogsVal, 2), 'profit' => round((float) $r->revenue - $cogsVal, 2)];
+            });
 
         return [
             'sales' => [
@@ -42,8 +63,20 @@ class ReportService
                 'retailValue' => round((float) Inventory::join('products', 'products.id', '=', 'inventory.product_id')->selectRaw('COALESCE(SUM(inventory.quantity*products.selling_price),0) v')->value('v'), 2),
                 'totalUnits' => (float) Inventory::sum('quantity'),
                 'byCategory' => Inventory::join('products', 'products.id', '=', 'inventory.product_id')->leftJoin('categories', 'categories.id', '=', 'products.category_id')->selectRaw('COALESCE(categories.name,"Other") name, SUM(inventory.quantity*products.cost_price) value, SUM(inventory.quantity) units')->groupBy('name')->orderByDesc('value')->get(),
-                'lowStock' => Product::where('status', 'active')->withSum('inventory as stock', 'quantity')->get()->filter(fn ($p) => (float) $p->stock > 0 && (float) $p->stock <= (float) $p->reorder_level)->count(),
-                'outOfStock' => Product::where('status', 'active')->withSum('inventory as stock', 'quantity')->get()->filter(fn ($p) => (float) $p->stock <= 0)->count(),
+                'lowStock' => Product::where('products.status', 'active')
+                    ->leftJoinSub(
+                        'SELECT product_id, COALESCE(SUM(quantity),0) as stock FROM inventory GROUP BY product_id',
+                        'inv', 'inv.product_id', '=', 'products.id'
+                    )
+                    ->whereRaw('COALESCE(inv.stock,0) > 0 AND COALESCE(inv.stock,0) <= products.reorder_level')
+                    ->count(),
+                'outOfStock' => Product::where('products.status', 'active')
+                    ->leftJoinSub(
+                        'SELECT product_id, COALESCE(SUM(quantity),0) as stock FROM inventory GROUP BY product_id',
+                        'inv2', 'inv2.product_id', '=', 'products.id'
+                    )
+                    ->whereRaw('COALESCE(inv2.stock,0) <= 0')
+                    ->count(),
             ],
             'expenses' => ['total' => round($expTotal, 2), 'count' => (clone $expenses)->count(), 'byCategory' => (clone $expenses)->selectRaw('category name, SUM(amount) value')->groupBy('category')->orderByDesc('value')->get(), 'list' => (clone $expenses)->with('user:id,name')->latest('date')->limit(10)->get()],
             'purchases' => ['total' => round((float) Purchase::where('status', '!=', 'cancelled')->whereBetween('created_at', [$b['start'], $b['end']])->sum('total'), 2), 'count' => Purchase::whereBetween('created_at', [$b['start'], $b['end']])->count()],

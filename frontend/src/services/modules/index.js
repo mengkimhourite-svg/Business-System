@@ -15,3 +15,4 @@ export { dashboardApi } from "./dashboardApi.js";
 export { reportApi } from "./reportApi.js";
 export { settingsApi } from "./settingsApi.js";
 export { aiApi } from "./aiApi.js";
+export { khqrPaymentApi } from "./khqrPaymentApi.js";

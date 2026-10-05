@@ -8,18 +8,32 @@ use App\Services\CurrencyService;
 use App\Services\PreferenceService;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
     /** GET /settings/public — branding + currency only (safe before authentication). */
     public function publicSettings()
     {
-        $b = Business::query()->orderBy('id')->first();
-        if (!$b) return ApiResponse::success(null);
-        return ApiResponse::success(['business_name' => $b->name, 'business_subtitle' => $b->subtitle, 'business_logo' => $b->logo, 'currency' => $b->currency, 'exchange_rate' => (float) $b->exchange_rate, 'tax_rate' => (float) $b->tax_rate]);
+        $data = Cache::remember('settings:public', 300, function () {
+            $b = Business::query()->orderBy('id')->first();
+            if (!$b) return null;
+            return ['business_name' => $b->name, 'business_subtitle' => $b->subtitle, 'business_logo' => $b->logo, 'currency' => $b->currency, 'exchange_rate' => (float) $b->exchange_rate, 'tax_rate' => (float) $b->tax_rate];
+        });
+        return ApiResponse::success($data);
     }
 
-    public function show(Request $request) { return ApiResponse::success($this->serialize($request->user()->business)); }
+    public function show(Request $request)
+    {
+        $b = $request->user()->business;
+        $n = $b->notification_settings ?? [];
+        $data = ['business_name' => $b->name, 'business_subtitle' => $b->subtitle, 'business_logo' => $b->logo, 'business_email' => $b->email, 'business_phone' => $b->phone, 'business_address' => $b->address,
+            'base_currency' => $b->base_currency, 'currency' => $b->currency, 'exchange_rate' => (float) $b->exchange_rate, 'tax_rate' => (float) $b->tax_rate, 'low_stock_threshold' => $b->low_stock_threshold, 'receipt_footer' => $b->receipt_footer,
+            'khqr_image' => $b->khqr_image,
+            'notify_low_stock' => $n['notify_low_stock'] ?? true, 'notify_orders' => $n['notify_orders'] ?? true, 'notify_reports' => $n['notify_reports'] ?? false];
+        return ApiResponse::success($data);
+    }
 
     public function update(Request $request, CurrencyService $currency)
     {
@@ -40,6 +54,7 @@ class SettingsController extends Controller
         if ($notify) $attrs['notification_settings'] = array_merge($b->notification_settings ?? [], $notify);
         $b->update($attrs);
         if (isset($data['exchange_rate']) && (float) $data['exchange_rate'] !== (float) $b->exchange_rate) $currency->setRate($b, (float) $data['exchange_rate'], $request->user()->id);
+        Cache::forget('settings:public');
         return ApiResponse::success($this->serialize($b->fresh()), 'Settings saved');
     }
 
@@ -57,11 +72,35 @@ class SettingsController extends Controller
         return ApiResponse::success(null, 'Preference reset');
     }
 
+    public function uploadKhqrImage(Request $request)
+    {
+        $request->validate([
+            'khqr_image' => ['required', 'image', 'max:5120'],
+        ]);
+
+        $b = $request->user()->business;
+
+        // Delete old image if exists
+        if ($b->khqr_image && Storage::disk('public')->exists($b->khqr_image)) {
+            Storage::disk('public')->delete($b->khqr_image);
+        }
+
+        $file = $request->file('khqr_image');
+        $path = $file->store('khqr', 'public');
+
+        $b->update(['khqr_image' => $path]);
+
+        Cache::forget('settings:public');
+
+        return ApiResponse::success(['khqr_image' => $path], 'KHQR image updated');
+    }
+
     private function serialize(Business $b): array
     {
         $n = $b->notification_settings ?? [];
         return ['business_name' => $b->name, 'business_subtitle' => $b->subtitle, 'business_logo' => $b->logo, 'business_email' => $b->email, 'business_phone' => $b->phone, 'business_address' => $b->address,
             'base_currency' => $b->base_currency, 'currency' => $b->currency, 'exchange_rate' => (float) $b->exchange_rate, 'tax_rate' => (float) $b->tax_rate, 'low_stock_threshold' => $b->low_stock_threshold, 'receipt_footer' => $b->receipt_footer,
+            'khqr_image' => $b->khqr_image,
             'notify_low_stock' => $n['notify_low_stock'] ?? true, 'notify_orders' => $n['notify_orders'] ?? true, 'notify_reports' => $n['notify_reports'] ?? false];
     }
 }

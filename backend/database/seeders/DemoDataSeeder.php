@@ -18,25 +18,76 @@ class DemoDataSeeder extends Seeder
         mt_srand(20240517);
 
         $cats = collect(['Beverages', 'Snacks', 'Dairy', 'Bakery', 'Electronics', 'Household', 'Personal Care', 'Stationery'])->mapWithKeys(fn ($n) => [$n => Category::create(['business_id' => $bid, 'name' => $n, 'description' => "$n products"])]);
-        $sups = collect([['Cambodia Beverage Co.', 'Sok Dara'], ['Phnom Penh Fresh Foods', 'Chan Sophea'], ['Mekong Electronics Ltd.', 'Kim Vanna'], ['Angkor Household Supplies', 'Heng Piseth'], ['Khmer Care Distribution', 'Ly Sreyneang'], ['Office Pro Cambodia', 'Meas Chantha']])->map(fn ($s, $i) => Supplier::create(['business_id' => $bid, 'name' => $s[0], 'contact_name' => $s[1], 'email' => 'sales@supplier'.($i + 1).'.com', 'phone' => '+855 12 000 '.str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT)]));
+        $sups = collect([['Cambodia Beverage Co.', 'Sok Dara'], ['Phnom Penh Fresh Foods', 'Chan Sophea'], ['Mekong Electronics Ltd.', 'Kim Vanna'], ['Angkor Household Supplies', 'Heng Piseth'], ['Khmer Care Distribution', 'Ly Sreyneang'], ['Office Pro Cambodia', 'Meas Chantha']])->map(fn ($s, $i) => Supplier::create(['business_id' => $bid, 'name' => $s[0], 'contact_name' => $s[1], 'email' => 'sales@supplier'.($i + 1).'.com', 'phone' => '855 12 000 '.str_pad((string) ($i + 1), 3, '0', STR_PAD_LEFT)]));
         $seed = [
-            ['Coca-Cola 330ml', 'Beverages', 'Coca-Cola', 0, 0.35, 0.6, 240, 48, 'can'], ['Angkor Beer 330ml', 'Beverages', 'Angkor', 0, 0.55, 0.9, 180, 48, 'can'], ['Vital Water 1.5L', 'Beverages', 'Vital', 0, 0.25, 0.45, 36, 40, 'bottle'],
-            ["Lay's Classic 70g", 'Snacks', "Lay's", 1, 0.65, 1.0, 95, 30, 'pack'], ['Oreo Original 133g', 'Snacks', 'Oreo', 1, 0.7, 1.1, 64, 24, 'pack'], ['Pringles Original 107g', 'Snacks', 'Pringles', 1, 1.2, 1.9, 0, 12, 'can'],
-            ['Anchor Full Cream Milk 1L', 'Dairy', 'Anchor', 1, 1.6, 2.3, 42, 24, 'carton'], ['Dutch Lady Yogurt 4pk', 'Dairy', 'Dutch Lady', 1, 1.4, 2.1, 18, 20, 'pack'], ['French Baguette', 'Bakery', 'House Bakery', 1, 0.3, 0.6, 40, 20, 'pcs'],
-            ['Samsung Galaxy A15 128GB', 'Electronics', 'Samsung', 2, 145, 189, 9, 3, 'pcs'], ['Anker 20W USB-C Charger', 'Electronics', 'Anker', 2, 9.5, 15.9, 34, 10, 'pcs'], ['JBL Go 3 Speaker', 'Electronics', 'JBL', 2, 28, 39.9, 4, 5, 'pcs'],
-            ['Sunlight Dish Soap 750ml', 'Household', 'Unilever', 3, 1.1, 1.8, 58, 20, 'bottle'], ['Scott Paper Towels 2pk', 'Household', 'Scott', 3, 1.6, 2.5, 12, 15, 'pack'],
-            ['Colgate Toothpaste 150g', 'Personal Care', 'Colgate', 4, 1.2, 1.95, 76, 24, 'pcs'], ['Head & Shoulders 330ml', 'Personal Care', 'P&G', 4, 3.4, 5.2, 8, 10, 'bottle'],
-            ['Pilot G2 Gel Pen Black', 'Stationery', 'Pilot', 5, 0.9, 1.5, 150, 40, 'pcs'], ['Double A Copy Paper A4', 'Stationery', 'Double A', 5, 3.6, 5.2, 45, 20, 'ream'],
+            ['Coca-Cola 330ml', 'Beverages', 'Coca-Cola', 0, 0.35, 0.6, 240, 48, 'can', 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400&h=400&fit=crop', 'Classic Coca-Cola cola-flavored carbonated soft drink. Refreshing taste perfect for meals, parties, and everyday enjoyment.'],
+            ['Angkor Beer 330ml', 'Beverages', 'Angkor', 0, 0.55, 0.9, 180, 48, 'can', 'https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&h=400&fit=crop', 'Premium Cambodian lager beer with a smooth, crisp flavor. Cambodia\'s most popular beer, ideal for social gatherings.'],
+            ['Vital Water 1.5L', 'Beverages', 'Vital', 0, 0.25, 0.45, 36, 40, 'bottle', 'https://images.unsplash.com/photo-1523362628745-0c100fc988a6?w=400&h=400&fit=crop', 'Pure purified drinking water in a convenient 1.5-liter bottle. Safe, clean, and essential for daily hydration.'],
+            ["Lay's Classic 70g", 'Snacks', "Lay's", 1, 0.65, 1.0, 95, 30, 'pack', 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&h=400&fit=crop', 'Crispy golden potato chips with a classic salted flavor. Light, crunchy, and perfect for snacking anytime.'],
+            ['Oreo Original 133g', 'Snacks', 'Oreo', 1, 0.7, 1.1, 64, 24, 'pack', 'https://images.unsplash.com/photo-1621202325924-58d6f0b0a440?w=400&h=400&fit=crop', 'Iconic chocolate sandwich cookies with a sweet cream filling. Twist, lick, and dunk for the classic Oreo experience.'],
+            ['Pringles Original 107g', 'Snacks', 'Pringles', 1, 1.2, 1.9, 0, 12, 'can', 'https://images.unsplash.com/photo-1613919113640-25732ef5c6f9?w=400&h=400&fit=crop', 'Stackable crispy potato crisps with a unique saddle shape. Consistent crunch and delicious original flavor in every chip.'],
+            ['Anchor Full Cream Milk 1L', 'Dairy', 'Anchor', 1, 1.6, 2.3, 42, 24, 'carton', 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=400&fit=crop', 'Rich and creamy full cream milk from New Zealand pastures. Packed with calcium and vitamin D for strong bones.'],
+            ['Dutch Lady Yogurt 4pk', 'Dairy', 'Dutch Lady', 1, 1.4, 2.1, 18, 20, 'pack', 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=400&fit=crop', 'Smooth and creamy yogurt in a convenient 4-pack. Great source of probiotics for healthy digestion and gut health.'],
+            ['French Baguette', 'Bakery', 'House Bakery', 1, 0.3, 0.6, 40, 20, 'pcs', 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=400&fit=crop', 'Freshly baked French-style baguette with a crispy golden crust and soft, airy interior. Perfect for sandwiches or with butter.'],
+            ['Samsung Galaxy A15 128GB', 'Electronics', 'Samsung', 2, 145, 189, 9, 3, 'pcs', 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400&h=400&fit=crop', 'Feature-packed smartphone with vibrant 6.5" AMOLED display, triple camera system, and long-lasting 5000mAh battery.'],
+            ['Anker 20W USB-C Charger', 'Electronics', 'Anker', 2, 9.5, 15.9, 34, 10, 'pcs', 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&h=400&fit=crop', 'Compact and fast USB-C wall charger with PowerIQ technology. Charges iPhone, Samsung, and other devices up to 3x faster.'],
+            ['JBL Go 3 Speaker', 'Electronics', 'JBL', 2, 28, 39.9, 4, 5, 'pcs', 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop', 'Ultra-portable Bluetooth speaker with bold JBL Pro Sound. Waterproof, dustproof, and offers up to 5 hours of playtime.'],
+            ['Sunlight Dish Soap 750ml', 'Household', 'Unilever', 3, 1.1, 1.8, 58, 20, 'bottle', 'https://images.unsplash.com/photo-1585421514284-efb74c2b69ba?w=400&h=400&fit=crop', 'Powerful grease-cutting dishwashing liquid with a refreshing lemon fragrance. Removes tough grease and food residue easily.'],
+            ['Scott Paper Towels 2pk', 'Household', 'Scott', 3, 1.6, 2.5, 12, 15, 'pack', 'https://images.unsplash.com/photo-1584556812952-905ffd0c611a?w=400&h=400&fit=crop', 'Absorbent and durable paper towels for quick cleanup of spills and messes. Strong enough for tough jobs, gentle on surfaces.'],
+            ['Colgate Toothpaste 150g', 'Personal Care', 'Colgate', 4, 1.2, 1.95, 76, 24, 'pcs', 'https://images.unsplash.com/photo-1559304787-e4e4a2a972e0?w=400&h=400&fit=crop', 'Advanced cavity protection toothpaste with fluoride formula. Fights plaque, strengthens enamel, and freshens breath.'],
+            ['Head & Shoulders 330ml', 'Personal Care', 'P&G', 4, 3.4, 5.2, 8, 10, 'bottle', 'https://images.unsplash.com/photo-1608248597279-f99d160bfbc6?w=400&h=400&fit=crop', 'Anti-dandruff shampoo with citrus fresh scent. Provides up to 100% dandruff protection while leaving hair clean and soft.'],
+            ['Pilot G2 Gel Pen Black', 'Stationery', 'Pilot', 5, 0.9, 1.5, 150, 40, 'pcs', 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&h=400&fit=crop', 'Smooth-writing premium gel pen with ergonomic rubber grip. Delivers consistent, skip-free ink for a comfortable writing experience.'],
+            ['Double A Copy Paper A4', 'Stationery', 'Double A', 5, 3.6, 5.2, 45, 20, 'ream', 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&h=400&fit=crop', 'High-quality A4 copy paper with 80gsm weight. Bright white, jam-free performance ideal for laser and inkjet printing.'],
+        ];
+        $brandWebsites = [
+            'Coca-Cola' => 'https://www.coca-colacompany.com',
+            'Angkor' => 'https://www.angkorbeer.com',
+            'Vital' => 'https://www.vitalwater.com',
+            "Lay's" => 'https://www.lays.com',
+            'Oreo' => 'https://www.oreo.com',
+            'Pringles' => 'https://www.pringles.com',
+            'Anchor' => 'https://www.anchor.co.nz',
+            'Dutch Lady' => 'https://www.dutchlady.com',
+            'House Bakery' => 'https://www.housebakery.com',
+            'Samsung' => 'https://www.samsung.com',
+            'Anker' => 'https://www.anker.com',
+            'JBL' => 'https://www.jbl.com',
+            'Unilever' => 'https://www.unilever.com',
+            'Scott' => 'https://www.scottbrand.com',
+            'Colgate' => 'https://www.colgate.com',
+            'P&G' => 'https://www.pg.com',
+            'Pilot' => 'https://www.pilotpen.com',
+            'Double A' => 'https://www.doubleapaper.com',
+        ];
+        $brandLogos = [
+            'Coca-Cola' => 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400&h=400&fit=crop',
+            'Angkor' => 'https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&h=400&fit=crop',
+            'Vital' => 'https://images.unsplash.com/photo-1523362628745-0c100fc988a6?w=400&h=400&fit=crop',
+            "Lay's" => 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400&h=400&fit=crop',
+            'Oreo' => 'https://images.unsplash.com/photo-1621202325924-58d6f0b0a440?w=400&h=400&fit=crop',
+            'Pringles' => 'https://images.unsplash.com/photo-1613919113640-25732ef5c6f9?w=400&h=400&fit=crop',
+            'Anchor' => 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=400&fit=crop',
+            'Dutch Lady' => 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400&h=400&fit=crop',
+            'House Bakery' => 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&h=400&fit=crop',
+            'Samsung' => 'https://images.unsplash.com/photo-1592899677977-9c10ca588bbd?w=400&h=400&fit=crop',
+            'Anker' => 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=400&h=400&fit=crop',
+            'JBL' => 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=400&fit=crop',
+            'Unilever' => 'https://images.unsplash.com/photo-1585421514284-efb74c2b69ba?w=400&h=400&fit=crop',
+            'Scott' => 'https://images.unsplash.com/photo-1584556812952-905ffd0c611a?w=400&h=400&fit=crop',
+            'Colgate' => 'https://images.unsplash.com/photo-1559304787-e4e4a2a972e0?w=400&h=400&fit=crop',
+            'P&G' => 'https://images.unsplash.com/photo-1608248597279-f99d160bfbc6?w=400&h=400&fit=crop',
+            'Pilot' => 'https://images.unsplash.com/photo-1585336261022-680e295ce3fe?w=400&h=400&fit=crop',
+            'Double A' => 'https://images.unsplash.com/photo-1586075010923-2dd4570fb338?w=400&h=400&fit=crop',
         ];
         $brands = [];
         $products = [];
-        foreach ($seed as $i => [$name, $cat, $brand, $sup, $cost, $price, $stock, $reorder, $unit]) {
-            $brands[$brand] ??= Brand::create(['business_id' => $bid, 'name' => $brand]);
-            $p = Product::create(['business_id' => $bid, 'category_id' => $cats[$cat]->id, 'brand_id' => $brands[$brand]->id, 'supplier_id' => $sups[$sup]->id, 'name' => $name, 'sku' => 'SKU-'.(1001 + $i), 'barcode' => '885'.str_pad((string) (1000000 + $i * 7919), 10, '0', STR_PAD_LEFT), 'unit' => $unit, 'cost_price' => $cost, 'selling_price' => $price, 'reorder_level' => $reorder, 'status' => $i === 5 ? 'inactive' : 'active']);
+        foreach ($seed as $i => [$name, $cat, $brand, $sup, $cost, $price, $stock, $reorder, $unit, $image, $description]) {
+            $brands[$brand] ??= Brand::create(['business_id' => $bid, 'name' => $brand, 'logo' => $brandLogos[$brand] ?? null, 'website' => $brandWebsites[$brand] ?? null, 'description' => "$brand official products", 'status' => 'active']);
+            $p = Product::create(['business_id' => $bid, 'category_id' => $cats[$cat]->id, 'brand_id' => $brands[$brand]->id, 'supplier_id' => $sups[$sup]->id, 'name' => $name, 'sku' => 'SKU-'.(1001 + $i), 'barcode' => '885'.str_pad((string) (1000000 + $i * 7919), 10, '0', STR_PAD_LEFT), 'unit' => $unit, 'cost_price' => $cost, 'selling_price' => $price, 'reorder_level' => $reorder, 'image' => $image, 'description' => $description, 'status' => $i === 5 ? 'inactive' : 'active']);
             Inventory::create(['business_id' => $bid, 'branch_id' => $branch->id, 'product_id' => $p->id, 'quantity' => $stock]);
             $products[] = $p;
         }
-        $customers = collect(['Sok Dara', 'Chan Sophea', 'Kim Vanna', 'Ly Sreyneang', 'Heng Piseth', 'Meas Chantha', 'Pich Bopha', 'Ouk Rithy', 'Sam Sokha', 'Nguon Malis'])->map(fn ($n, $i) => Customer::create(['business_id' => $bid, 'name' => $n, 'email' => strtolower(str_replace(' ', '.', $n)).'@example.com', 'phone' => '+855 '.mt_rand(10, 99).' '.mt_rand(100, 999).' '.mt_rand(100, 999), 'type' => $i % 4 === 1 ? 'wholesale' : 'retail', 'created_at' => now()->subDays(mt_rand(5, 120))]));
+        $customers = collect(['Sok Dara', 'Chan Sophea', 'Kim Vanna', 'Ly Sreyneang', 'Heng Piseth', 'Meas Chantha', 'Pich Bopha', 'Ouk Rithy', 'Sam Sokha', 'Nguon Malis'])->map(fn ($n, $i) => Customer::create(['business_id' => $bid, 'name' => $n, 'email' => strtolower(str_replace(' ', '.', $n)).'@example.com', 'phone' => '855 '.mt_rand(10, 99).' '.mt_rand(100, 999).' '.mt_rand(100, 999), 'type' => $i % 4 === 1 ? 'wholesale' : 'retail', 'created_at' => now()->subDays(mt_rand(5, 120))]));
 
         $seq = 1;
         for ($day = 60; $day >= 0; $day--) {

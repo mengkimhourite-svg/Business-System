@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\V1\{AiController, AuthController, DashboardController, InventoryController, MiscController, PosController, PurchaseController, ResourceController, SettingsController};
+use App\Http\Controllers\Api\V1\{AiController, AuthController, DashboardController, InventoryController, KhqrPaymentController, MiscController, PosController, PurchaseController, ResourceController, SettingsController};
 use App\Support\ApiResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -24,7 +24,7 @@ Route::prefix('v1')->group(function () {
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
     });
 
-    Route::middleware(['auth:sanctum', 'throttle:120,1', 'writes:90'])->group(function () {
+    Route::middleware(['auth:sanctum', 'load.perms', 'throttle:120,1', 'writes:90'])->group(function () {
         Route::prefix('auth')->group(function () {
             Route::get('me', [AuthController::class, 'me']);
             Route::post('logout', [AuthController::class, 'logout']);
@@ -71,6 +71,7 @@ Route::prefix('v1')->group(function () {
         // Settings & preferences
         Route::get('settings', [SettingsController::class, 'show'])->middleware('permission:settings.view');
         Route::put('settings', [SettingsController::class, 'update'])->middleware('permission:settings.update');
+        Route::post('settings/khqr-image', [SettingsController::class, 'uploadKhqrImage'])->middleware('permission:settings.update');
         Route::get('preferences', [SettingsController::class, 'preferences']);
         Route::put('preferences/{key}', [SettingsController::class, 'setPreference'])->where('key', '[A-Za-z0-9_.\-]+');
         Route::delete('preferences/{key}', [SettingsController::class, 'resetPreference'])->where('key', '[A-Za-z0-9_.\-]+');
@@ -79,6 +80,20 @@ Route::prefix('v1')->group(function () {
         Route::post('ai/chat', [AiController::class, 'chat'])->middleware(['permission:ai.view', 'throttle:30,1']);
         Route::post('ai/analyze/{kind}', [AiController::class, 'analyze'])->middleware(['permission:ai.view', 'throttle:20,1'])->whereIn('kind', ['sales', 'inventory', 'customers', 'recommendations', 'anomalies']);
         Route::get('ai/insights', [AiController::class, 'insights'])->middleware('permission:ai.view');
+
+        // Bakong KHQR payments
+        Route::prefix('khqr')->group(function () {
+            // Create a pending payment (POS cashier)
+            Route::post('payments', [KhqrPaymentController::class, 'store'])->middleware('permission:sales.create');
+            // Upload receipt screenshot (POS cashier or customer)
+            Route::post('payments/{id}/receipt', [KhqrPaymentController::class, 'uploadReceipt'])->middleware('permission:sales.create')->whereNumber('id');
+            // Check payment status (polling)
+            Route::get('payments/{id}/status', [KhqrPaymentController::class, 'status'])->whereNumber('id');
+            // Admin review
+            Route::get('payments', [KhqrPaymentController::class, 'index'])->middleware('permission:orders.view');
+            Route::post('payments/{id}/approve', [KhqrPaymentController::class, 'approve'])->middleware('permission:orders.update')->whereNumber('id');
+            Route::post('payments/{id}/reject', [KhqrPaymentController::class, 'reject'])->middleware('permission:orders.update')->whereNumber('id');
+        });
 
         // Misc
         Route::get('notifications', [MiscController::class, 'notifications']);

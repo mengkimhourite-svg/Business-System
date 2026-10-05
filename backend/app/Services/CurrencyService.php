@@ -4,10 +4,11 @@ namespace App\Services;
 
 use App\Models\Business;
 use App\Models\ExchangeRate;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Centralized money handling. Amounts are STORED in the base currency (USD).
- * USD → KHR: amount × rate.  KHR → USD: amount ÷ rate.  Rounding happens once per conversion.
+ * USD -> KHR: amount x rate.  KHR -> USD: amount / rate.  Rounding happens once per conversion.
  * Transactions snapshot the rate in force, so history never changes when the rate is updated.
  */
 class CurrencyService
@@ -17,9 +18,12 @@ class CurrencyService
 
     public function currentRate(Business $business): string
     {
-        $latest = ExchangeRate::withoutGlobalScopes()->where('business_id', $business->id)
-            ->where('from_currency', self::BASE)->where('to_currency', 'KHR')
-            ->orderByDesc('effective_date')->orderByDesc('id')->value('rate');
+        $cacheKey = "exchange_rate:{$business->id}";
+        $latest = Cache::remember($cacheKey, 300, function () use ($business) {
+            return ExchangeRate::withoutGlobalScopes()->where('business_id', $business->id)
+                ->where('from_currency', self::BASE)->where('to_currency', 'KHR')
+                ->orderByDesc('effective_date')->orderByDesc('id')->value('rate');
+        });
         return (string) ($latest ?? $business->exchange_rate ?? config('sbs.default_exchange_rate'));
     }
 
@@ -53,6 +57,7 @@ class CurrencyService
     public function setRate(Business $business, float $rate, int $userId): ExchangeRate
     {
         $business->update(['exchange_rate' => $rate]);
+        Cache::forget("exchange_rate:{$business->id}");
         return ExchangeRate::create(['business_id' => $business->id, 'from_currency' => self::BASE, 'to_currency' => 'KHR', 'rate' => $rate, 'effective_date' => now()->toDateString(), 'created_by' => $userId]);
     }
 }

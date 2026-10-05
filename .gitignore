@@ -19,3 +19,9 @@ __pycache__/
 
 backend/storage/logs/*.sql
 *.sql
+
+# Laravel runtime files
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*

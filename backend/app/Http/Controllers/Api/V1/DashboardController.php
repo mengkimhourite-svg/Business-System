@@ -8,6 +8,7 @@ use App\Services\ReportService;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
+/** Dashboard KPIs and analytics reports. */
 class DashboardController extends Controller
 {
     public function summary(Request $request, DashboardService $service)

@@ -115,14 +115,14 @@ export function AIThinking() {
   );
 }
 
-export function AIError({ onRetry }) {
+export function AIError({ onRetry, errorMessage }) {
   const { t } = useI18n();
   return (
     <div className="flex items-start gap-3">
       <AIMark size="sm" mood="error" tone="danger" className="mt-0.5" />
       <div className="rounded-lg border border-danger/30 bg-danger-light/50 px-3.5 py-3">
         <p className="text-sm font-medium text-fg">{t("common.somethingWentWrong")}</p>
-        <p className="mt-0.5 text-xs text-fg-secondary">{t("errors.generic")}</p>
+        <p className="mt-0.5 text-xs text-fg-secondary">{errorMessage || t("errors.generic")}</p>
         {onRetry && (
           <Button variant="outline" size="xs" leftIcon={RefreshCw} onClick={onRetry} className="mt-2">
             {t("common.tryAgain")}
@@ -153,7 +153,7 @@ export function AIChatMessage({ message, onPick, onRetry, disabled }) {
       </div>
     );
   }
-  if (message.error) return <AIError onRetry={onRetry ? () => onRetry(message.retry) : undefined} />;
+  if (message.error) return <AIError onRetry={onRetry ? () => onRetry(message.retry) : undefined} errorMessage={message.errorMessage} />;
   return (
     <div className="space-y-3">
       <div className="flex items-start gap-3">

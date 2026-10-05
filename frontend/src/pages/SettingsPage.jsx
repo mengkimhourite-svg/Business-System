@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Building2, SlidersHorizontal, Bell, Lock, Database, RotateCcw, Sun, Moon, Monitor, UserCircle2, Sparkles } from "lucide-react";
+import { Building2, SlidersHorizontal, Bell, Lock, Database, RotateCcw, Sun, Moon, Monitor, UserCircle2, Sparkles, QrCode, Upload } from "lucide-react";
 import { cn } from "../utils/cn.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -16,7 +16,7 @@ import { ImageInput } from "../components/ui/ImageInput.jsx";
 import { AISettings } from "../components/ai/index.js";
 import { Button, Card, CardHeader, CardContent, CardFooter, Field, Input, Select, Textarea, Switch, RadioGroup, Tabs, Alert, Badge, ConfirmDialog, useToast } from "../components/ui/index.js";
 
-const TABS = ["profile", "general", "appearance", "notifications", "ai", "security", "data"];
+const TABS = ["profile", "general", "appearance", "notifications", "khqr", "ai", "security", "data"];
 
 /* ---------------- Profile ---------------- */
 function ProfileTab() {
@@ -41,6 +41,9 @@ function ProfileTab() {
     setSaving(true);
     try {
       const updated = await api.updateProfile({ name: form.name.trim(), phone: form.phone, avatar: form.avatar });
+      if (updated.avatar && !updated.avatar.startsWith("data:")) {
+        updated.avatar = `${updated.avatar}${updated.avatar.includes("?") ? "&" : "?"}t=${Date.now()}`;
+      }
       setUser((u) => ({ ...u, ...updated }));
       toast.success(t("settings.profileSaved"));
     } catch (err) {
@@ -56,7 +59,7 @@ function ProfileTab() {
         <CardHeader title={t("settings.profile")} description={t("settings.profileHint")} />
         <CardContent className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <Field label={t("settings.profilePhoto")}>
-            <ImageInput value={form.avatar} onChange={(v) => set("avatar", v)} name={form.name} shape="circle" size="xl" hint={t("settings.photoHint")} />
+            <ImageInput value={form.avatar} onChange={(v) => set("avatar", v)} name={form.name} shape="circle" size="xl" />
           </Field>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label={t("users.fullName")} htmlFor="p-name" required error={errors.name}>
@@ -124,7 +127,7 @@ function GeneralTab({ canEdit }) {
       <Card>
         <CardHeader title={t("settings.branding")} description={t("settings.brandingHint")} />
         <CardContent className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <Field label={t("settings.businessLogo")} hint={t("settings.logoHint")}>
+          <Field label={t("settings.businessLogo")}>
             <ImageInput value={form.business_logo || ""} onChange={(v) => set("business_logo", v)} name={form.business_name} shape="square" size="xl" disabled={!canEdit} />
           </Field>
           <div className="grid grid-cols-1 gap-4">
@@ -353,6 +356,108 @@ function SecurityTab() {
   );
 }
 
+/* ---------------- KHQR Settings ---------------- */
+function KhqrSettingsTab({ canEdit }) {
+  const { t } = useI18n();
+  const { settings } = useSettings();
+  const toast = useToast();
+  const fileRef = useRef(null);
+  const [preview, setPreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  const khqrImage = settings?.khqr_image;
+  const imageUrl = khqrImage ? (khqrImage.startsWith("http") ? khqrImage : `/storage/${khqrImage}`) : "/images/khqr-default.jpg";
+
+  const onFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(t("khqr.fileTooLarge"));
+      return;
+    }
+
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = (ev) => setPreview(ev.target.result);
+    reader.readAsDataURL(file);
+
+    // Upload
+    setUploading(true);
+    try {
+      const { settingsApi } = await import("../services/modules/settingsApi.js");
+      await settingsApi.uploadKhqrImage(file);
+      toast.success(t("khqr.imageUpdated"));
+      window.location.reload();
+    } catch (err) {
+      toast.error(t(errorKey(err)));
+      setPreview(null);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader title={t("khqr.settingsTitle")} description={t("khqr.settingsHint")} />
+      <CardContent className="space-y-6">
+        {/* Current QR Image */}
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-sm font-medium text-fg">{t("khqr.currentQR")}</p>
+          <div className="rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100">
+            <div className="relative">
+              <div className="absolute left-2 top-2 h-4 w-4 border-l-[2.5px] border-t-[2.5px] border-gray-300 rounded-tl-lg" />
+              <div className="absolute right-2 top-2 h-4 w-4 border-r-[2.5px] border-t-[2.5px] border-gray-300 rounded-tr-lg" />
+              <div className="absolute bottom-2 left-2 h-4 w-4 border-l-[2.5px] border-b-[2.5px] border-gray-300 rounded-bl-lg" />
+              <div className="absolute bottom-2 right-2 h-4 w-4 border-r-[2.5px] border-b-[2.5px] border-gray-300 rounded-br-lg" />
+              {!imgError ? (
+                <img
+                  src={preview || imageUrl}
+                  alt="KHQR"
+                  className="h-48 w-48 object-contain"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="flex h-48 w-48 items-center justify-center">
+                  <div className="text-center">
+                    <QrCode className="mx-auto h-12 w-12 text-gray-300" />
+                    <p className="mt-2 text-xs text-gray-400">KHQR</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Upload Button */}
+        {canEdit && (
+          <div className="flex flex-col items-center gap-3">
+            <div
+              onClick={() => fileRef.current?.click()}
+              className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-gray-200 px-6 py-4 transition-all hover:border-primary/40 hover:bg-primary/[0.02]"
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/[0.07]">
+                <Upload className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-fg">{t("khqr.changeQR")}</p>
+                <p className="text-xs text-fg-muted">PNG, JPG (max 5MB)</p>
+              </div>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFileChange} />
+            {uploading && (
+              <div className="flex items-center gap-2 text-sm text-primary">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                {t("common.uploading")}...
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 /* ---------------- Data ---------------- */
 function DataTab({ canEdit }) {
   const { t } = useI18n();
@@ -431,6 +536,7 @@ export default function SettingsPage() {
     { key: "general", label: t("settings.general"), icon: Building2 },
     { key: "appearance", label: t("settings.appearance"), icon: SlidersHorizontal },
     { key: "notifications", label: t("settings.notifications"), icon: Bell },
+    { key: "khqr", label: t("khqr.settingsTab"), icon: QrCode },
     { key: "ai", label: t("ai.assistant"), icon: Sparkles },
     { key: "security", label: t("settings.security"), icon: Lock },
     { key: "data", label: t("settings.data"), icon: Database },
@@ -466,6 +572,7 @@ export default function SettingsPage() {
           {tab === "general" && <GeneralTab canEdit={canEdit} />}
           {tab === "appearance" && <PreferencesTab />}
           {tab === "notifications" && <NotificationsTab canEdit={canEdit} />}
+          {tab === "khqr" && <KhqrSettingsTab canEdit={canEdit} />}
           {tab === "ai" && <AISettings />}
           {tab === "security" && <SecurityTab />}
           {tab === "data" && <DataTab canEdit={canEdit} />}

@@ -39,8 +39,8 @@ class Phase8CrudTest extends BaseTestCase
         $flows = [
             'categories' => fn () => ['name' => 'QA Category', 'description' => 'desc'],
             'brands' => fn () => ['name' => 'QA Brand', 'website' => 'https://qa.example.com'],
-            'suppliers' => fn () => ['name' => 'QA Supplier', 'contact_name' => 'Bob', 'email' => 'bob@supplier.com', 'phone' => '+855 111'],
-            'customers' => fn () => ['name' => 'QA Customer', 'email' => 'qa@customer.com', 'phone' => '+855 222', 'type' => 'wholesale'],
+            'suppliers' => fn () => ['name' => 'QA Supplier', 'contact_name' => 'Bob', 'email' => 'bob@supplier.com', 'phone' => '855 111'],
+            'customers' => fn () => ['name' => 'QA Customer', 'email' => 'qa@customer.com', 'phone' => '855 222', 'type' => 'wholesale'],
             'branches' => fn () => ['name' => 'QA Branch', 'code' => 'QA-01', 'address' => 'St 1', 'manager' => 'Alice'],
         ];
 

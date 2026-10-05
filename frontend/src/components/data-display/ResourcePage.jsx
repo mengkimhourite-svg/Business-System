@@ -17,12 +17,21 @@ import { SearchBar, FilterBar, ViewToggle } from "./Toolbar.jsx";
 /* ------------------------------------------------------------------ */
 /* Lookups (select options from other resources)                        */
 /* ------------------------------------------------------------------ */
+const lookupCache = new Map();
+
 export function useLookups(resources = []) {
   const [data, setData] = useState({});
   const key = resources.join(",");
   useEffect(() => {
     if (!key) return undefined;
     let active = true;
+
+    const cached = lookupCache.get(key);
+    if (cached) {
+      setData(cached);
+      return () => { active = false; };
+    }
+
     Promise.all(
       key.split(",").map((r) =>
         api
@@ -30,7 +39,12 @@ export function useLookups(resources = []) {
           .then((res) => [r, res.data])
           .catch(() => [r, []])
       )
-    ).then((entries) => active && setData(Object.fromEntries(entries)));
+    ).then((entries) => {
+      if (!active) return;
+      const result = Object.fromEntries(entries);
+      lookupCache.set(key, result);
+      setData(result);
+    });
     return () => {
       active = false;
     };
@@ -362,7 +376,7 @@ export function ResourcePage({ config, refreshKey = 0, headerActions, children, 
 
   const load = useCallback(async () => {
     const id = ++reqId.current;
-    setState((s) => ({ ...s, loading: true, error: null }));
+    setState((s) => ({ ...s, loading: s.data.length === 0, error: null }));
     try {
       const res = await api.list(config.resource, { page, perPage, search: debouncedSearch, sort, filters });
       if (id !== reqId.current) return;

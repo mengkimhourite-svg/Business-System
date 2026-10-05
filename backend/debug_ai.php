@@ -9,8 +9,8 @@ echo "user id=" . $user->id . " business_id=" . ($user->business_id ?? 'NULL') .
 
 // Try snapshot
 try {
-    $ai = new \App\Services\AiService($user);
-    $snap = $ai->snapshot();
+    $ai = app(\App\Services\AiService::class);
+    $snap = $ai->snapshot($user);
     echo "snapshot products count=" . count($snap['products']) . PHP_EOL;
     echo "first product keys=" . json_encode(array_keys($snap['products'][0] ?? null)) . PHP_EOL;
 } catch (\Throwable $e) {

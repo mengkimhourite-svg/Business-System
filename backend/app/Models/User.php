@@ -24,8 +24,21 @@ class User extends Authenticatable
     /** Flat permission list; '*' for super admin. Backend is the source of truth. */
     public function permissionNames(): array
     {
-        if (!$this->role) return [];
-        if ($this->role->slug === 'super_admin') return ['*'];
+        if (!$this->relationLoaded('role')) {
+            $this->load('role');
+        }
+        if (!$this->role) {
+            // Fallback: check the role directly via role_id if relationship failed
+            if ($this->role_id) {
+                $role = Role::withoutGlobalScopes()->find($this->role_id);
+                if ($role && in_array($role->slug, ['super_admin', 'super-admin'], true)) return ['*'];
+            }
+            return [];
+        }
+        if (in_array($this->role->slug, ['super_admin', 'super-admin'], true)) return ['*'];
+        if (!$this->relationLoaded('role.permissions')) {
+            $this->load('role.permissions');
+        }
         return $this->role->permissions->pluck('name')->all();
     }
 

@@ -133,26 +133,24 @@ export default function InventoryPage() {
       view: false,
       defaultSort: { key: "stock", dir: "asc" },
       columns: [
+        { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
         {
           key: "name",
           labelKey: "products.item",
           primary: true,
           sortable: true,
-          render: (r) => (
-            <div className="flex items-center gap-3">
-              <Avatar src={r.image} name={r.name} size="sm" shape="square" />
-              <div className="min-w-0">
-                <p className="truncate font-medium text-fg">{r.name}</p>
-                <p className="font-mono text-xs text-fg-muted">{r.sku}</p>
-              </div>
-            </div>
-          ),
+          render: (r) => <p className="truncate font-medium text-fg">{r.name}</p>,
+        },
+        {
+          key: "image",
+          labelKey: "common.image",
+          render: (r) => <Avatar src={r.image} name={r.name} size="sm" shape="square" />,
         },
         { key: "category_name", labelKey: "common.category", sortable: true, hideOnMobile: true },
         { key: "stock", labelKey: "inventory.onHand", sortable: true, align: "right", render: (r) => <span className={cn("font-semibold tabular", r.stock <= 0 ? "text-danger" : r.stock <= r.reorder_level ? "text-warning-dark" : "text-fg")}>{r.stock}</span> },
         { key: "reorder_level", labelKey: "products.reorderLevel", sortable: true, align: "right", hideOnMobile: true, render: (r) => <span className="tabular">{r.reorder_level}</span> },
         { key: "stock_value", labelKey: "inventory.stockValue", align: "right", render: (r, { fmt: f }) => <span className="tabular">{f.currency(r.stock * r.cost_price)}</span> },
-        { key: "stock_status", labelKey: "common.status", align: "center", render: (r) => <StatusBadge status={r.stock_status} /> },
+        { key: "status", labelKey: "common.status", sortable: true, align: "center", render: (r) => <StatusBadge status={r.status} /> },
       ],
       filters: [
         { key: "category_id", labelKey: "common.category", optionsFrom: "categories" },
@@ -187,6 +185,7 @@ export default function InventoryPage() {
       selectable: false,
       view: false,
       columns: [
+        { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
         {
           key: "product_name",
           labelKey: "common.product",

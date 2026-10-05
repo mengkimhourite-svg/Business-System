@@ -21,5 +21,6 @@ return [
         'reports' => ['view', 'export'],
         'ai' => ['view'],
         'settings' => ['view', 'update'],
+        'payments' => ['view', 'approve', 'reject'],
     ],
 ];

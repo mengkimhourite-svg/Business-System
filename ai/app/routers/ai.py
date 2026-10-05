@@ -53,4 +53,5 @@ async def anomaly_detection(req: AnomalyDetectionRequest):
 async def chatbot(req: ChatRequest):
     if not req.message and not req.intent:
         raise HTTPException(status_code=422, detail={"message": "message or intent is required"})
-    return ok(await safe_enrich(analytics.chat(req), req.context.language))
+    ins = await analytics.chat(req)
+    return ok(await safe_enrich(ins, req.context.language))

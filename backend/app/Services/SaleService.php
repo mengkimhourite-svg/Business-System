@@ -42,9 +42,14 @@ class SaleService
         return DB::transaction(function () use ($user, $business, $branchId, $data, $payCurrency, $rate, $taxRate, $discountPct, $isWholesale) {
             $subtotal = '0.00';
             $lines = [];
+
+            // Batch fetch all products at once instead of one-by-one
+            $productIds = array_column($data['items'], 'product_id');
+            $products = Product::whereIn('id', $productIds)->where('status', 'active')->lockForUpdate()->get()->keyBy('id');
+
             foreach ($data['items'] as $item) {
                 /** @var Product $product */
-                $product = Product::whereKey($item['product_id'])->where('status', 'active')->lockForUpdate()->first();
+                $product = $products->get($item['product_id']);
                 if (!$product) throw ValidationException::withMessages(['items' => ['Product not found or inactive.']]);
                 $qty = $this->currency->round($item['qty'], 3);
                 if (bccomp($qty, '0', 3) <= 0) throw ValidationException::withMessages(['items' => ['Quantity must be greater than zero.']]);
@@ -61,12 +66,17 @@ class SaleService
             $customerId = !empty($data['customer_id']) ? Customer::whereKey($data['customer_id'])->value('id') : null;
             $number = 'ORD-'.str_pad((string) ((Sale::withoutGlobalScopes()->where('business_id', $business->id)->max('id') ?? 0) + 10001), 5, '0', STR_PAD_LEFT);
 
+            // KHQR payments start as pending — the KhqrService handles approval
+            $isKhqr = ($data['payment_method'] ?? 'cash') === 'khqr';
+            $saleStatus = $isKhqr ? 'pending' : 'completed';
+            $paymentStatus = $isKhqr ? 'unpaid' : 'paid';
+
             $sale = Sale::create([
                 'business_id' => $business->id, 'branch_id' => $branchId, 'customer_id' => $customerId, 'user_id' => $user->id,
                 'number' => $number, 'mode' => $data['mode'] ?? 'standard',
                 'subtotal' => $subtotal, 'discount' => $discount, 'discount_percent' => $discountPct, 'tax' => $tax, 'tax_rate' => $taxRate, 'total' => $total,
                 'currency' => $payCurrency, 'exchange_rate' => $rate, 'total_in_currency' => $this->currency->fromBase($total, $payCurrency, $rate),
-                'status' => 'completed', 'payment_status' => 'paid', 'idempotency_key' => $data['idempotency_key'] ?? null, 'note' => $data['note'] ?? null,
+                'status' => $saleStatus, 'payment_status' => $paymentStatus, 'idempotency_key' => $data['idempotency_key'] ?? null, 'note' => $data['note'] ?? null,
             ]);
 
             foreach ($lines as $l) {
@@ -74,18 +84,20 @@ class SaleService
                 $this->inventory->move($l['product'], $branchId, '-'.$l['qty'], 'out', 'Sale', $sale->number, $user->id, $sale);
             }
 
-            // Payment: `received` is typed in the pay currency → converted to base with 4-dp precision; change computed in pay currency
-            $receivedDisplay = isset($data['received']) ? (string) $data['received'] : $this->currency->fromBase($total, $payCurrency, $rate);
-            $totalDisplay = $this->currency->fromBase($total, $payCurrency, $rate);
-            if (($data['payment_method'] ?? 'cash') === 'cash' && bccomp($receivedDisplay, $totalDisplay, 4) < 0) {
-                throw ValidationException::withMessages(['received' => ['Amount received is less than the total.']]);
+            // For non-KHQR: create payment record immediately. KHQR payments are handled by KhqrService.
+            if (!$isKhqr) {
+                $receivedDisplay = isset($data['received']) ? (string) $data['received'] : $this->currency->fromBase($total, $payCurrency, $rate);
+                $totalDisplay = $this->currency->fromBase($total, $payCurrency, $rate);
+                if (($data['payment_method'] ?? 'cash') === 'cash' && bccomp($receivedDisplay, $totalDisplay, 4) < 0) {
+                    throw ValidationException::withMessages(['received' => ['Amount received is less than the total.']]);
+                }
+                $change = max(0, (float) bcsub($receivedDisplay, $totalDisplay, 4));
+                Payment::create([
+                    'business_id' => $business->id, 'payable_type' => Sale::class, 'payable_id' => $sale->id, 'user_id' => $user->id,
+                    'method' => $data['payment_method'] ?? 'cash', 'amount' => $total, 'received' => $receivedDisplay, 'change_given' => $this->currency->round($change, $payCurrency === 'KHR' ? 0 : 2),
+                    'currency' => $payCurrency, 'exchange_rate' => $rate,
+                ]);
             }
-            $change = max(0, (float) bcsub($receivedDisplay, $totalDisplay, 4));
-            Payment::create([
-                'business_id' => $business->id, 'payable_type' => Sale::class, 'payable_id' => $sale->id, 'user_id' => $user->id,
-                'method' => $data['payment_method'] ?? 'cash', 'amount' => $total, 'received' => $receivedDisplay, 'change_given' => $this->currency->round($change, $payCurrency === 'KHR' ? 0 : 2),
-                'currency' => $payCurrency, 'exchange_rate' => $rate,
-            ]);
 
             return $sale->load('items', 'payments', 'customer', 'user', 'branch');
         });

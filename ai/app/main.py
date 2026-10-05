@@ -51,17 +51,32 @@ async def health():
 
 # ---- clean, structured errors (never stack traces) ----
 @app.exception_handler(RequestValidationError)
-async def validation_handler(_: Request, exc: RequestValidationError):
+async def validation_handler(request: Request, exc: RequestValidationError):
     errors: dict[str, list[str]] = {}
     for e in exc.errors():
         loc = ".".join(str(p) for p in e.get("loc", []) if p not in ("body",)) or "body"
         errors.setdefault(loc, []).append(e.get("msg", "Invalid value"))
+    body = await request.body()
+    logging.getLogger("sbs.ai").error("[AI] 422 validation error on %s %s: %s", request.method, request.url.path, errors)
+    body_str = body.decode('utf-8', errors='replace')
+    print(f"[AI] 422 DETAILS: {errors}")
+    import json
+    try:
+        parsed = json.loads(body_str)
+        if 'products' in parsed and parsed['products']:
+            print(f"[AI] 422 PRODUCTS[0]: {json.dumps(parsed['products'][0], default=str)}")
+        if 'customers' in parsed and parsed['customers']:
+            print(f"[AI] 422 CUSTOMERS[0]: {json.dumps(parsed['customers'][0], default=str)}")
+    except Exception:
+        print(f"[AI] 422 BODY (first 3000): {body_str[:3000]}")
     return JSONResponse(status_code=422, content={"success": False, "message": "Validation failed", "errors": errors})
 
 
 @app.exception_handler(StarletteHTTPException)
-async def http_handler(_: Request, exc: StarletteHTTPException):
+async def http_handler(request: Request, exc: StarletteHTTPException):
     detail = exc.detail if isinstance(exc.detail, dict) else {"message": str(exc.detail)}
+    if exc.status_code >= 400:
+        logging.getLogger("sbs.ai").warning("[AI] HTTP %d on %s %s: %s", exc.status_code, request.method, request.url.path, detail)
     return JSONResponse(status_code=exc.status_code, content={"success": False, **detail})
 
 

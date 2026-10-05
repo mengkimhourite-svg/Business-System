@@ -21,6 +21,7 @@ import {
   BarChart3,
   Sparkles,
   Settings,
+  QrCode,
 } from "lucide-react";
 
 /**
@@ -54,6 +55,7 @@ export const NAVIGATION = [
     items: [
       { key: "sales", path: "/sales", labelKey: "nav.sales", icon: ShoppingCart, permission: "sales.view" },
       { key: "orders", path: "/orders", labelKey: "nav.orders", icon: ClipboardList, permission: "orders.view" },
+      { key: "khqr-payments", path: "/khqr-payments", labelKey: "nav.khqrPayments", icon: QrCode, permission: "orders.view" },
       { key: "purchases", path: "/purchases", labelKey: "nav.purchases", icon: ShoppingBag, permission: "purchases.view" },
       { key: "inventory", path: "/inventory", labelKey: "nav.inventory", icon: Warehouse, permission: "inventory.view" },
       { key: "expenses", path: "/expenses", labelKey: "nav.expenses", icon: Receipt, permission: "expenses.view" },
@@ -67,6 +69,8 @@ export const NAVIGATION = [
       { key: "users", path: "/users", labelKey: "nav.users", icon: UserCog, permission: "users.view" },
       { key: "roles", path: "/roles", labelKey: "nav.roles", icon: ShieldCheck, permission: "roles.view" },
       { key: "branches", path: "/branches", labelKey: "nav.branches", icon: Building2, permission: "branches.view" },
+      { key: "reports", path: "/reports", labelKey: "nav.reports", icon: BarChart3, permission: "reports.view" },
+      { key: "settings", path: "/settings", labelKey: "nav.settings", icon: Settings, permission: "settings.view" },
     ],
   },
   {
@@ -74,15 +78,15 @@ export const NAVIGATION = [
     labelKey: "nav.analytics",
     icon: LineChart,
     items: [
-      { key: "reports", path: "/reports", labelKey: "nav.reports", icon: BarChart3, permission: "reports.view" },
       { key: "ai", path: "/ai-insights", labelKey: "nav.ai", icon: Sparkles, permission: "ai.view" },
     ],
   },
+
   {
     key: "system",
     labelKey: "nav.system",
     icon: Settings2,
-    items: [{ key: "settings", path: "/settings", labelKey: "nav.settings", icon: Settings, permission: "settings.view" }],
+    items: [],
   },
 ];
 

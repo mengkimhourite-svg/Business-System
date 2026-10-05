@@ -185,6 +185,7 @@ export default function PurchasesPage() {
       viewSize: "lg",
       canDelete: can("purchases.delete"),
       columns: [
+        { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
         {
           key: "number",
           labelKey: "purchases.number",

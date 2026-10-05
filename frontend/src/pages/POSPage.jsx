@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Minus, Trash2, ShoppingCart, X, Printer, CheckCircle2, Banknote, CreditCard, QrCode, Landmark, ScanBarcode, Search } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { cn } from "../utils/cn.js";
 import { useI18n } from "../i18n/index.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -10,6 +11,7 @@ import { api, errorKey } from "../services/api.js";
 import { PageHeader } from "../components/layout/PageHeader.jsx";
 import { Button, Card, Input, Select, Field, Modal, Badge, Avatar, EmptyState, ErrorState, Skeleton, Tabs, Alert, useToast } from "../components/ui/index.js";
 import { Zap, ShoppingBag, Warehouse, RotateCcw } from "lucide-react";
+import KhqrPaymentModal from "../components/pos/KhqrPaymentModal.jsx";
 
 /** POS sell modes — presentation only (no extra backend concepts). */
 const SELL_MODES = [
@@ -44,9 +46,10 @@ export default function POSPage() {
   const [completed, setCompleted] = useState(null);
   const [branches, setBranches] = useState([]);
   const [selectedBranchId, setSelectedBranchId] = useState(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
+  const [khqrOpen, setKhqrOpen] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState(null);
+  const load = useCallback(async ({ showLoading = true } = {}) => {
+    if (showLoading) setLoading(true);
     setError(null);
     try {
       const [p, c, cu, br] = await Promise.all([
@@ -60,7 +63,7 @@ export default function POSPage() {
     } catch (e) {
       setError(e);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }, []);
 
@@ -152,19 +155,32 @@ export default function POSPage() {
         discount_percent: discountPct,
         payment_method: method,
         received: method === "cash" ? receivedDisplay : null,
+        received: method === "khqr" ? total : receivedBase,
         currency: money.display,
         mode,
         branch_id: Number(selectedBranchId),
       });
-      setCompleted(order);
-      setPayOpen(false);
-      setCartOpen(false);
-      setCart([]);
-      setDiscount("");
-      setCustomerId("");
-      setReceived("");
-      toast.success(t("pos.saleCompletedHint", { number: order.number }));
-      load();
+      // For KHQR: open the payment modal to handle receipt upload + verification
+      if (method === "khqr") {
+        setPayOpen(false);
+        setPendingOrder(order);
+        setKhqrOpen(true);
+        setCart([]);
+        setDiscount("");
+        setCustomerId("");
+        setReceived("");
+        load({ showLoading: false });
+      } else {
+        setCompleted(order);
+        setPayOpen(false);
+        setCartOpen(false);
+        setCart([]);
+        setDiscount("");
+        setCustomerId("");
+        setReceived("");
+        toast.success(t("pos.saleCompletedHint", { number: order.number }));
+        load({ showLoading: false });
+      }
     } catch (err) {
       if (err.status === 422 && err.errors) {
         const firstError = Object.values(err.errors)[0];
@@ -191,7 +207,7 @@ export default function POSPage() {
   const methods = [
     { key: "cash", label: t("common.cash"), icon: Banknote },
     { key: "card", label: t("common.card"), icon: CreditCard },
-    { key: "qr", label: t("common.qr"), icon: QrCode },
+    { key: "khqr", label: t("common.khqr"), icon: QrCode },
     { key: "bank_transfer", label: t("common.bankTransfer"), icon: Landmark },
   ];
 
@@ -366,7 +382,7 @@ export default function POSPage() {
           ) : loading ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="aspect-[4/5] w-full rounded-lg" />
+                <Skeleton key={i} className="aspect-4/5 w-full rounded-lg" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -392,7 +408,7 @@ export default function POSPage() {
                       q > 0 ? "border-primary-300 ring-1 ring-primary-200" : "border-border hover:border-primary-300 hover:shadow"
                     )}
                   >
-                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
+                    <div className="relative aspect-4/3 w-full overflow-hidden bg-muted">
                       <Avatar src={p.image} name={p.name} size="xl" shape="square" className="h-full w-full rounded-none text-2xl" />
                       {q > 0 && <span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-white shadow-sm tabular">{q}</span>}
                       {out && <span className="absolute inset-0 flex items-center justify-center bg-surface/80 text-xs font-semibold text-danger">{t("pos.outOfStock")}</span>}
@@ -483,6 +499,40 @@ export default function POSPage() {
               </div>
             </Field>
           )}
+          {method === "qr" && (
+            <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-surface-muted p-6">
+              <QRCodeSVG
+                value={`Business: ${settings.business_name || "Angkor Mart"}\nAmount: ${fmt.currency(total)}\nReference: POS-${Date.now().toString().slice(-6)}\nDate: ${new Date().toLocaleDateString()}`}
+                size={180}
+                level="M"
+                includeMargin={true}
+                bgColor="#ffffff"
+                fgColor="#000000"
+              />
+              <div className="text-center">
+                <p className="text-sm font-medium text-fg">{t("pos.scanToPay")}</p>
+                <p className="text-2xl font-bold text-primary tabular">{fmt.currency(total)}</p>
+                <p className="text-xs text-fg-muted">{settings.business_name || "Angkor Mart"}</p>
+              </div>
+              <div className="w-full space-y-2 text-sm">
+                <div className="flex justify-between rounded-md bg-surface px-3 py-2">
+                  <span className="text-fg-secondary">{t("common.amount")}</span>
+                  <span className="font-semibold tabular">{fmt.currency(total)}</span>
+                </div>
+                <div className="flex justify-between rounded-md bg-surface px-3 py-2">
+                  <span className="text-fg-secondary">{t("common.reference")}</span>
+                  <span className="font-mono text-xs">POS-{Date.now().toString().slice(-6)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          {method === "khqr" && (
+            <div className="rounded-lg border border-border bg-surface-muted p-4 text-center">
+              <QrCode className="mx-auto h-8 w-8 text-primary" />
+              <p className="mt-2 text-sm font-medium text-fg">{t("khqr.posHint")}</p>
+              <p className="text-xs text-fg-muted">{t("khqr.posHintSub")}</p>
+            </div>
+          )}
           <div className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
             <span className="text-fg-secondary">{t("pos.changeDue")}</span>
             <span className={cn("font-semibold tabular", insufficient ? "text-danger" : "text-success-dark")}>{money.formatDisplay(changeDisplay)}</span>
@@ -568,6 +618,18 @@ export default function POSPage() {
           </div>
         )}
       </Modal>
+
+      {/* KHQR Payment Modal */}
+      <KhqrPaymentModal
+        open={khqrOpen}
+        onClose={() => { setKhqrOpen(false); setPendingOrder(null); }}
+        order={pendingOrder}
+        onPaid={() => {
+          setKhqrOpen(false);
+          setPendingOrder(null);
+          load({ showLoading: false });
+        }}
+      />
     </>
   );
 }

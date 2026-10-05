@@ -22,27 +22,23 @@ export const productsConfig = {
   lookups: ["categories", "brands", "suppliers"],
   viewSize: "lg",
   columns: [
+    { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
     {
       key: "name",
       labelKey: "products.item",
       primary: true,
       sortable: true,
-      render: (row) => (
-        <div className="flex items-center gap-3">
-          <Avatar src={row.image} name={row.name} size="md" shape="square" />
-          <div className="min-w-0">
-            <p className="truncate font-medium text-fg">{row.name}</p>
-            <p className="truncate text-xs text-fg-muted">{row.brand_name || "—"}</p>
-          </div>
-        </div>
-      ),
+      render: (row) => <p className="truncate font-medium text-fg">{row.name}</p>,
     },
-    { key: "sku", labelKey: "products.sku", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.sku}</span> },
+    {
+      key: "image",
+      labelKey: "common.image",
+      render: (r) => <Avatar src={r.image} name={r.name} size="sm" shape="square" />,
+    },
     { key: "category_name", labelKey: "common.category", sortable: true },
-    { key: "selling_price", labelKey: "products.sellingPrice", sortable: true, align: "right", render: (r, { fmt }) => <span className="font-medium tabular">{fmt.currency(r.selling_price)}</span> },
     {
       key: "stock",
-      labelKey: "products.stock",
+      labelKey: "products.onHand",
       sortable: true,
       align: "right",
       render: (r) => (
@@ -51,7 +47,8 @@ export const productsConfig = {
         </span>
       ),
     },
-    { key: "stock_status", labelKey: "products.stockLevel", align: "center", render: (r) => <StatusBadge status={r.stock_status} /> },
+    { key: "reorder_level", labelKey: "products.reorderLevel", sortable: true, align: "right", render: (r) => <span className="tabular">{r.reorder_level}</span> },
+    { key: "selling_price", labelKey: "products.stockValue", sortable: true, align: "right", render: (r, { fmt }) => <span className="font-medium tabular">{fmt.currency(r.selling_price * r.stock)}</span> },
     { key: "status", labelKey: "common.status", sortable: true, align: "center", render: (r) => <StatusBadge status={r.status} /> },
   ],
   filters: [
@@ -108,6 +105,27 @@ export const productsConfig = {
       },
     ],
   },
+  rowActions: (row, { t }) => [
+    {
+      key: "adjust-stock",
+      label: t("products.adjustStock") || "Adjust Stock",
+      icon: Package,
+      onClick: () => ({ type: "adjustStock", row }),
+    },
+    {
+      key: "duplicate",
+      label: t("common.duplicate") || "Duplicate",
+      icon: Package,
+      onClick: () => ({ type: "duplicate", row }),
+    },
+    {
+      key: "archive",
+      label: t("common.archive") || "Archive",
+      icon: Package,
+      onClick: () => ({ type: "archive", row }),
+      separator: true,
+    },
+  ],
   view: (row, { t, fmt }) => {
     const margin = row.selling_price ? ((row.selling_price - row.cost_price) / row.selling_price) * 100 : 0;
     return (

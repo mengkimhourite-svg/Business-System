@@ -33,6 +33,7 @@ export default function ExpensesPage() {
       emptyHintKey: "expenses.emptyHint",
       icon: Receipt,
       columns: [
+        { key: "id", labelKey: "common.id", sortable: true, render: (r) => <span className="font-mono text-xs text-fg-secondary">{r.id}</span> },
         {
           key: "reference",
           labelKey: "common.reference",
