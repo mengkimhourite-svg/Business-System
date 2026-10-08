@@ -158,7 +158,7 @@ export default function LoginPage() {
                       type="button"
                       onClick={() => {
                         setEmail(a.email);
-                        setPassword("password");
+                        setPassword("pass word");
                         setErrors({});
                       }}
                       className="rounded-md border border-border bg-surface px-2.5 py-2 text-left text-xs transition-colors hover:border-primary-300 hover:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -170,6 +170,10 @@ export default function LoginPage() {
                 </div>
               </div>
             )}
+
+            <h1>
+              test
+            </h1>
           </div>
         </div>
       </div>

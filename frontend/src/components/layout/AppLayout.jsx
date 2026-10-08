@@ -41,7 +41,7 @@ export function AppLayout() {
           </main>
         </div>
         {/* AI Assistant (frontend-only; hidden when disabled in Settings → AI Assistant) */}
-        <AIFloatingButton />
+        {/* <AIFloatingButton /> */}
         <AIAssistantPanel />
         <WelcomeModal />
       </div>
