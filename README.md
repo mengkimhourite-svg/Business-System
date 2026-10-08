@@ -1,33 +1,33 @@
 # Smart Business System
 
-> **A full-stack business management platform with AI-powered business assistance and analytics.**
+> **A full-stack business management platform for sales, inventory, POS, purchases, customers, suppliers, payments, reporting, and business operations.**
 
-Smart Business System is a centralized business management platform designed to help businesses manage their daily operations, including **products, inventory, sales, POS, purchases, customers, suppliers, expenses, payments, reports, users, roles, branches, and AI-powered business insights**.
+Smart Business System is a centralized business management platform designed to help businesses manage daily operations, including **products, inventory, sales, POS, purchases, customers, suppliers, expenses, payments, reports, users, roles, permissions, branches, and business settings**.
 
 ---
 
 ## Overview
 
-The system combines three main technologies:
+The system uses a modern full-stack architecture:
 
 ```text
 ┌──────────────────────┐
-│   React Frontend     │
-│   User Interface     │
+│    React Frontend    │
+│    User Interface    │
 └──────────┬───────────┘
            │
            │ REST API
            ▼
 ┌──────────────────────┐
-│   Laravel Backend    │
-│   Business Logic     │
+│    Laravel Backend   │
+│    Business Logic    │
 └──────────┬───────────┘
            │
-           │ AI API
+           │ Database
            ▼
 ┌──────────────────────┐
-│   Python FastAPI     │
-│   AI & Analytics     │
+│     PostgreSQL       │
+│     Data Storage     │
 └──────────────────────┘
 ```
 
@@ -35,54 +35,54 @@ The system combines three main technologies:
 
 ## Key Features
 
-| Module                    | Features                                             |
-| ------------------------- | ---------------------------------------------------- |
-| Authentication            | Login, logout, password management, protected access |
-| Users                     | User management and user preferences                 |
-| Role-Based Access Control | Roles, permissions, access control                   |
-| Business                  | Business and branch management                       |
-| Dashboard                 | KPIs, statistics, business overview                  |
-| Products                  | Products, categories, brands                         |
-| Inventory                 | Stock management and inventory movements             |
-| POS                       | Cart, checkout, sales and payments                   |
-| Sales                     | Sales transactions and history                       |
-| Orders                    | Order management and tracking                        |
-| Purchases                 | Purchases and purchase items                         |
-| Suppliers                 | Supplier management                                  |
-| Customers                 | Customer management                                  |
-| Expenses                  | Business expense management                          |
-| Payments                  | Payment records and tracking                         |
-| Reports                   | Business reports and analytics                       |
-| AI Assistant              | AI chat and business assistance                      |
-| AI Insights               | AI-powered business insights                         |
-| Currency                  | Currency and exchange-rate management                |
-| Languages                 | Khmer and English                                    |
-| Settings                  | System and user preferences                          |
-| UI Customization          | Themes and dashboard customization                   |
-| Data Tools                | Search, filter, sort and pagination                  |
-| Logging                   | Activity and request logging                         |
-| Notifications             | Notification support                                 |
-| Testing                   | Backend and AI automated tests                       |
+| Module                    | Features                                                  |
+| ------------------------- | --------------------------------------------------------- |
+| Authentication            | Login, logout, password management, protected access      |
+| Users                     | User management and user preferences                      |
+| Role-Based Access Control | Roles, permissions, and access control                    |
+| Business                  | Business and branch management                            |
+| Dashboard                 | KPIs, statistics, and business overview                   |
+| Products                  | Products, categories, and brands                          |
+| Inventory                 | Stock management and inventory movements                  |
+| POS                       | Cart, checkout, sales, and payments                       |
+| Sales                     | Sales transactions and history                            |
+| Orders                    | Order management and tracking                             |
+| Purchases                 | Purchases and purchase items                              |
+| Suppliers                 | Supplier management                                       |
+| Customers                 | Customer management                                       |
+| Expenses                  | Business expense management                               |
+| Payments                  | Payment records and tracking                              |
+| KHQR Payments             | Payment creation, receipt upload, approval, and rejection |
+| Reports                   | Business reports and analytics                            |
+| Currency                  | Currency and exchange-rate management                     |
+| Languages                 | Khmer and English                                         |
+| Settings                  | System and user preferences                               |
+| UI Customization          | Themes and dashboard customization                        |
+| Data Tools                | Search, filtering, sorting, and pagination                |
+| Logging                   | Activity and request logging                              |
+| Notifications             | Notification support                                      |
+| Testing                   | Backend automated tests                                   |
 
 ---
 
 # System Architecture
 
 ```text
-                         SMART BUSINESS SYSTEM
-                                  │
-             ┌────────────────────┼────────────────────┐
-             │                    │                    │
-             ▼                    ▼                    ▼
-      ┌─────────────┐      ┌─────────────┐      ┌─────────────┐
-      │   React     │      │   Laravel   │      │   Python    │
-      │  Frontend   │─────▶│   Backend   │─────▶│   FastAPI   │
-      └─────────────┘      └──────┬──────┘      └──────┬──────┘
-                                  │                    │
-                                  ▼                    ▼
-                           ┌─────────────┐      ┌─────────────┐
-                           │  Database   │      │ AI Provider │
-                           └─────────────┘      └─────────────┘
+                       SMART BUSINESS SYSTEM
+                                │
+                    ┌───────────┴───────────┐
+                    │                       │
+                    ▼                       ▼
+             ┌─────────────┐        ┌─────────────┐
+             │    React    │        │   Laravel   │
+             │  Frontend   │───────▶│   Backend   │
+             └─────────────┘        └──────┬──────┘
+                                           │
+                                           ▼
+                                    ┌─────────────┐
+                                    │ PostgreSQL  │
+                                    │  Database   │
+                                    └─────────────┘
 ```
 
 ## Request Flow
@@ -93,69 +93,118 @@ User
  ▼
 React Frontend
  │
+ │ REST API Request
  ▼
-Laravel REST API
+Laravel Backend
  │
  ├── Authentication
+ ├── Authorization
  ├── Business Logic
+ ├── Validation
  ├── Products
  ├── Inventory
  ├── Sales / POS
+ ├── Orders
  ├── Purchases
  ├── Customers
  ├── Suppliers
  ├── Expenses
+ ├── Payments
  └── Reports
  │
- └──────────────▶ Python AI Service
-                         │
-                         ├── Analytics
-                         ├── Statistics
-                         └── AI Provider
+ ▼
+PostgreSQL Database
+ │
+ ▼
+Laravel JSON Response
+ │
+ ▼
+React Frontend
+ │
+ ▼
+User
 ```
 
 ---
 
-# AI Architecture
+# Backend API
 
-The AI functionality is separated into a dedicated Python FastAPI service.
+The Laravel backend provides REST API endpoints under:
 
 ```text
-┌──────────────────────┐
-│    React Frontend    │
-│                      │
-│  AI Assistant        │
-│  AI Insights         │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│   Laravel Backend    │
-│                      │
-│  AiController        │
-│  AiService           │
-│  AiInsightsAdapter   │
-└──────────┬───────────┘
-           │
-           ▼
-┌──────────────────────┐
-│   Python FastAPI     │
-│                      │
-│  AI Router           │
-│  Analytics           │
-│  Statistics          │
-│  AI Provider         │
-└──────────────────────┘
+/api/v1
 ```
 
-## AI Capabilities
+## API Documentation
 
-* AI Business Assistant
-* Business Analytics
-* AI Business Insights
-* Statistical Analysis
-* AI Provider Integration
-* Business Performance Insights
+```text
+http://localhost:8000/docs/api
+```
+
+## Health Check
+
+```text
+http://localhost:8000/api/v1/health
+```
+
+The backend provides APIs for:
+
+* Authentication
+* Dashboard
+* Products
+* Categories
+* Brands
+* Inventory
+* Orders
+* POS
+* Purchases
+* Customers
+* Suppliers
+* Expenses
+* Payments
+* KHQR payments
+* Users
+* Roles
+* Permissions
+* Settings
+* Reports
+* Notifications
+* Search
+
+---
+
+# Authentication Flow
+
+```text
+User
+ │
+ ▼
+Login Form
+ │
+ ▼
+React Frontend
+ │
+ │ POST /api/v1/auth/login
+ ▼
+Laravel Backend
+ │
+ ├── Validate credentials
+ ├── Find user
+ ├── Verify password
+ └── Generate authentication token
+ │
+ ▼
+PostgreSQL
+ │
+ ▼
+Laravel Response
+ │
+ ├── User
+ └── Token
+ │
+ ▼
+React Frontend
+```
 
 ---
 
@@ -227,51 +276,33 @@ Update Inventory
 | Laravel Sanctum | API authentication   |
 | Eloquent ORM    | Database interaction |
 | PHPUnit         | Backend testing      |
-
-## AI
-
-| Technology | Purpose                |
-| ---------- | ---------------------- |
-| Python     | AI service             |
-| FastAPI    | AI REST API            |
-| Analytics  | Business analysis      |
-| Statistics | Statistical processing |
-| Pytest     | AI service testing     |
+| Scramble        | API documentation    |
 
 ## Database
 
-* Relational database
-* Laravel migrations
-* Eloquent ORM
-* Database seeders
+| Technology         | Purpose                            |
+| ------------------ | ---------------------------------- |
+| PostgreSQL         | Relational database                |
+| Laravel Migrations | Database schema management         |
+| Eloquent ORM       | Database queries and relationships |
+| Database Seeders   | Initial and demo data              |
+
+## Development Environment
+
+| Technology     | Purpose                        |
+| -------------- | ------------------------------ |
+| Docker         | Containerized development      |
+| Docker Compose | Multi-container orchestration  |
+| Laravel Sail   | Laravel Docker environment     |
+| Composer       | PHP dependency management      |
+| npm            | Frontend dependency management |
 
 ---
 
 # Project Structure
 
 ```text
-Smart_Business_System/
-│
-├── ai/
-│   ├── app/
-│   │   ├── routers/
-│   │   │   └── ai.py
-│   │   ├── schemas/
-│   │   │   ├── common.py
-│   │   │   └── requests.py
-│   │   ├── services/
-│   │   │   ├── analytics.py
-│   │   │   └── provider.py
-│   │   ├── utils/
-│   │   │   └── stats.py
-│   │   ├── config.py
-│   │   └── main.py
-│   │
-│   ├── tests/
-│   │   ├── conftest.py
-│   │   └── test_api.py
-│   │
-│   └── requirements.txt
+Business-System/
 │
 ├── backend/
 │   ├── app/
@@ -283,14 +314,18 @@ Smart_Business_System/
 │   │   ├── Services/
 │   │   └── Support/
 │   │
+│   ├── bootstrap/
 │   ├── config/
 │   ├── database/
 │   │   ├── migrations/
 │   │   └── seeders/
+│   │
 │   ├── routes/
+│   ├── storage/
 │   ├── tests/
 │   ├── artisan
 │   ├── composer.json
+│   ├── compose.yaml
 │   └── phpunit.xml
 │
 ├── frontend/
@@ -311,10 +346,7 @@ Smart_Business_System/
 │   ├── vite.config.ts
 │   └── index.html
 │
-├── docs/
-│   └── SMART_BUSINESS_SYSTEM_FEATURES.md
-│
-├── .env.example
+├── image/
 ├── .gitignore
 └── README.md
 ```
@@ -325,80 +357,129 @@ Smart_Business_System/
 
 ## Prerequisites
 
-Make sure you have installed:
+Make sure the following software is installed:
+
+* Git
+* Docker Desktop
+* Node.js
+* npm
+
+For manual backend development, you may also use:
 
 * PHP
 * Composer
-* Node.js
-* npm
-* Python
-* Database Server
-* Git
 
 ---
 
-## 1. Clone the Repository
+# 1. Clone the Repository
 
 ```bash
 git clone <your-repository-url>
-cd Smart_Business_System
+cd Business-System
 ```
 
 ---
 
-## 2. Backend Setup
+# 2. Backend Environment
+
+Go to the backend directory:
 
 ```bash
 cd backend
 ```
 
-Install dependencies:
+Install PHP dependencies if needed:
 
 ```bash
 composer install
 ```
 
-Create environment file:
+Create the environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Generate application key:
+Generate the Laravel application key:
 
 ```bash
 php artisan key:generate
 ```
 
-Configure your database inside `.env`.
+Configure PostgreSQL in `.env`:
 
-Run migrations:
+```env
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_DATABASE=sbs
+DB_USERNAME=sail
+DB_PASSWORD=password
 
-```bash
-php artisan migrate
+FORWARD_DB_PORT=5433
 ```
 
-Seed demo data:
+> Inside the Docker network, Laravel connects to PostgreSQL using `postgres:5432`. From the host machine, PostgreSQL is exposed through `localhost:5433`.
+
+---
+
+# 3. Run Backend with Docker
+
+Start the Smart Business Docker environment:
 
 ```bash
-php artisan db:seed
+docker compose -p smart-business up -d
 ```
 
-Start Laravel:
+Check the containers:
 
 ```bash
-php artisan serve
+docker compose -p smart-business ps
 ```
 
-Backend:
+The backend runs at:
 
 ```text
-http://127.0.0.1:8000
+http://localhost:8000
+```
+
+The PostgreSQL database is available inside Docker at:
+
+```text
+postgres:5432
+```
+
+PostgreSQL can be accessed from the host at:
+
+```text
+localhost:5433
 ```
 
 ---
 
-## 3. Frontend Setup
+# 4. Database Setup
+
+Run migrations inside the Laravel container:
+
+```bash
+docker compose -p smart-business exec laravel.test php artisan migrate
+```
+
+Seed permissions:
+
+```bash
+docker compose -p smart-business exec laravel.test php artisan db:seed --class=PermissionSeeder
+```
+
+Seed business data:
+
+```bash
+docker compose -p smart-business exec laravel.test php artisan db:seed --class=BusinessSeeder
+```
+
+---
+
+# 5. Frontend Setup
 
 Open another terminal:
 
@@ -412,116 +493,135 @@ Install dependencies:
 npm install
 ```
 
-Start Vite:
+Create the frontend environment file:
+
+```bash
+cp .env.example .env
+```
+
+Configure the Laravel API:
+
+```env
+VITE_USE_MOCK=false
+VITE_API_URL=http://localhost:8000/api/v1
+```
+
+Start the frontend:
 
 ```bash
 npm run dev
 ```
 
+The frontend will be available at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+# Run the System
+
+## Step 1 - Start Docker Desktop
+
+Start Docker Desktop and make sure the Docker Engine is running.
+
+## Step 2 - Start Backend and PostgreSQL
+
+From the backend directory:
+
+```bash
+docker compose -p smart-business up -d
+```
+
+Check the service status:
+
+```bash
+docker compose -p smart-business ps
+```
+
+Expected services:
+
+```text
+laravel.test
+postgres
+```
+
+## Step 3 - Start Frontend
+
+From the frontend directory:
+
+```bash
+npm run dev
+```
+
+## Application URLs
+
+```text
 Frontend:
+http://localhost:5173
 
-```text
-http://127.0.0.1:5173
+Backend:
+http://localhost:8000
+
+Backend Health:
+http://localhost:8000/api/v1/health
+
+API Documentation:
+http://localhost:8000/docs/api
+
+PostgreSQL Host Access:
+localhost:5433
 ```
 
 ---
 
-## 4. AI Service Setup
+# Stop Smart Business
 
-Open another terminal:
-
-```bash
-cd ai
-```
-
-Install Python dependencies:
+To stop only the Smart Business Docker services:
 
 ```bash
-pip install -r requirements.txt
+docker compose -p smart-business stop
 ```
 
-Start FastAPI:
+To remove the Smart Business containers and network:
 
 ```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8001
+docker compose -p smart-business down
 ```
 
-AI Service:
-
-```text
-http://127.0.0.1:8001
-```
-
----
-
-# Run All Services
-
-The system requires three services:
-
-## Terminal 1 — Laravel
-
-```bash
-cd backend
-php artisan serve
-```
-
-## Terminal 2 — React
-
-```bash
-cd frontend
-npm run dev
-```
-
-## Terminal 3 — Python AI
-
-```bash
-cd ai
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8001
-```
-
-## Complete Flow
-
-```text
-                    ┌─────────────────┐
-                    │  React Frontend │
-                    │   :5173         │
-                    └────────┬────────┘
-                             │
-                             ▼
-                    ┌─────────────────┐
-                    │ Laravel Backend │
-                    │   :8000         │
-                    └───────┬─────────┘
-                            │
-                            ▼
-                    ┌─────────────────┐
-                    │  Python FastAPI │
-                    │   :8001         │
-                    └─────────────────┘
-```
+These commands target the `smart-business` Compose project and do not intentionally stop unrelated Docker Compose projects.
 
 ---
 
 # Testing
 
-## Laravel
+## Backend Tests
+
+Run Laravel tests inside the container:
 
 ```bash
-cd backend
-php artisan test
+docker compose -p smart-business exec laravel.test php artisan test
 ```
 
-Or:
+Check Laravel routes:
 
 ```bash
-vendor/bin/phpunit
+docker compose -p smart-business exec laravel.test php artisan route:list
 ```
 
-## Python AI
+Check the PHP syntax of the API routes file:
 
 ```bash
-cd ai
-pytest
+docker compose -p smart-business exec laravel.test php -l routes/api.php
+```
+
+## Health Check
+
+Verify that the backend health endpoint is available:
+
+```text
+http://localhost:8000/api/v1/health
 ```
 
 ---
@@ -543,46 +643,25 @@ frontend/src/i18n/
 
 ---
 
-# Documentation
-
-Detailed project feature documentation is available in:
-
-```text
-docs/SMART_BUSINESS_SYSTEM_FEATURES.md
-```
-
-The documentation covers:
-
-* System features
-* Business modules
-* AI features
-* Authentication
-* Role-Based Access Control
-* POS
-* Inventory
-* Reports
-* System settings
-* Testing
-
----
-
 # Project Goals
 
 The Smart Business System aims to:
 
-* Centralize business operations
-* Simplify business management
-* Manage products and inventory
-* Manage sales and purchases
-* Manage customers and suppliers
-* Track expenses and payments
-* Generate business reports
-* Control users and permissions
-* Support multiple branches
-* Support multiple currencies
-* Support Khmer and English
-* Provide AI business assistance
-* Provide AI-powered business insights
+* Centralize business operations.
+* Simplify business management.
+* Manage products and inventory.
+* Manage sales and purchases.
+* Manage customers and suppliers.
+* Track expenses and payments.
+* Support POS operations.
+* Generate business reports.
+* Control users, roles, and permissions.
+* Support multiple branches.
+* Support multiple currencies.
+* Support Khmer and English.
+* Provide a scalable REST API.
+* Use PostgreSQL for reliable relational data storage.
+* Provide a containerized local development environment.
 
 ---
 
@@ -590,21 +669,23 @@ The Smart Business System aims to:
 
 ```text
 ┌────────────────────────────────────────────┐
-│           SMART BUSINESS SYSTEM             │
+│           SMART BUSINESS SYSTEM            │
 ├────────────────────────────────────────────┤
 │                                            │
 │  Sales and POS                             │
-│  Inventory                                 │
-│  Purchases                                 │
+│  Products and Inventory                    │
+│  Orders and Purchases                      │
 │  Customers and Suppliers                   │
 │  Expenses and Payments                     │
+│  Bakong KHQR Payments                      │
 │  Reports and Dashboard                     │
 │  Authentication and RBAC                   │
 │  Business and Branches                     │
 │  Multi-Currency                            │
 │  Khmer and English                         │
-│  AI Assistant                              │
-│  AI Business Insights                     │
+│  PostgreSQL                                │
+│  Docker                                    │
+│  REST API                                  │
 │                                            │
 └────────────────────────────────────────────┘
 ```
@@ -619,10 +700,14 @@ This project is developed for educational and project purposes.
 
 # Project Information
 
-**Project Name:** Smart Business System
-
-**Type:** Full-Stack Business Management System
-
-**Architecture:** React + Laravel + Python FastAPI + Database
-
-**AI:** AI Assistant + Business Analytics + AI Insights
+| Item                        | Details                               |
+| --------------------------- | ------------------------------------- |
+| **Project Name**            | Smart Business System                 |
+| **Type**                    | Full-Stack Business Management System |
+| **Architecture**            | React + Laravel + PostgreSQL + Docker |
+| **Frontend**                | React + Vite                          |
+| **Backend**                 | Laravel REST API                      |
+| **Database**                | PostgreSQL                            |
+| **Authentication**          | Laravel Sanctum                       |
+| **API Documentation**       | Scramble                              |
+| **Development Environment** | Docker Compose / Laravel Sail         |
