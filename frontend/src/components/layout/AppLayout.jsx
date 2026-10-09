@@ -6,8 +6,7 @@ import { Sidebar } from "./Sidebar.jsx";
 import { Navbar } from "./Navbar.jsx";
 import { useMediaQuery } from "../../hooks/index.js";
 import { useLayoutTheme } from "../../context/LayoutThemeContext.jsx";
-import { AIAssistantProvider } from "../../context/AIAssistantContext.jsx";
-import { AIFloatingButton, AIAssistantPanel } from "../ai/index.js";
+
 import { PageTransition } from "../ui/Motion.jsx";
 import { WelcomeModal } from "./WelcomeModal.jsx";
 
@@ -24,8 +23,7 @@ export function AppLayout() {
   }, [location.pathname]);
 
   return (
-    <AIAssistantProvider>
-      <div className="min-h-screen bg-background" style={cssVars}>
+    <div className="min-h-screen bg-background" style={cssVars}>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-sm focus:text-white">
           Skip to content
         </a>
@@ -40,11 +38,7 @@ export function AppLayout() {
             </div>
           </main>
         </div>
-        {/* AI Assistant (frontend-only; hidden when disabled in Settings → AI Assistant) */}
-        {/* <AIFloatingButton /> */}
-        <AIAssistantPanel />
         <WelcomeModal />
       </div>
-    </AIAssistantProvider>
   );
 }

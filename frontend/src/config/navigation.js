@@ -73,14 +73,7 @@ export const NAVIGATION = [
       { key: "settings", path: "/settings", labelKey: "nav.settings", icon: Settings, permission: "settings.view" },
     ],
   },
-  {
-    key: "analytics",
-    labelKey: "nav.analytics",
-    icon: LineChart,
-    items: [
-      { key: "ai", path: "/ai-insights", labelKey: "nav.ai", icon: Sparkles, permission: "ai.view" },
-    ],
-  },
+
 
   {
     key: "system",

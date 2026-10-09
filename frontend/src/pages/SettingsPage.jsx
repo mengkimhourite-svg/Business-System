@@ -13,10 +13,9 @@ import { useLocalStorage } from "../hooks/index.js";
 import { PageHeader } from "../components/layout/PageHeader.jsx";
 import { BrandMark } from "../components/layout/Brand.jsx";
 import { ImageInput } from "../components/ui/ImageInput.jsx";
-import { AISettings } from "../components/ai/index.js";
 import { Button, Card, CardHeader, CardContent, CardFooter, Field, Input, Select, Textarea, Switch, RadioGroup, Tabs, Alert, Badge, ConfirmDialog, useToast } from "../components/ui/index.js";
 
-const TABS = ["profile", "general", "appearance", "notifications", "khqr", "ai", "security", "data"];
+const TABS = ["profile", "general", "appearance", "notifications", "khqr", "security", "data"];
 
 /* ---------------- Profile ---------------- */
 function ProfileTab() {
@@ -537,7 +536,6 @@ export default function SettingsPage() {
     { key: "appearance", label: t("settings.appearance"), icon: SlidersHorizontal },
     { key: "notifications", label: t("settings.notifications"), icon: Bell },
     { key: "khqr", label: t("khqr.settingsTab"), icon: QrCode },
-    { key: "ai", label: t("ai.assistant"), icon: Sparkles },
     { key: "security", label: t("settings.security"), icon: Lock },
     { key: "data", label: t("settings.data"), icon: Database },
   ];
@@ -573,7 +571,6 @@ export default function SettingsPage() {
           {tab === "appearance" && <PreferencesTab />}
           {tab === "notifications" && <NotificationsTab canEdit={canEdit} />}
           {tab === "khqr" && <KhqrSettingsTab canEdit={canEdit} />}
-          {tab === "ai" && <AISettings />}
           {tab === "security" && <SecurityTab />}
           {tab === "data" && <DataTab canEdit={canEdit} />}
         </div>

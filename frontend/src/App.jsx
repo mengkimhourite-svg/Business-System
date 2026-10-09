@@ -25,8 +25,6 @@ import ExpensesPage from "./pages/ExpensesPage.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 import RolesPage from "./pages/RolesPage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
-import AIInsightsPage from "./pages/AIInsightsPage.jsx";
-import EnterpriseAIDemoPage from "./pages/EnterpriseAIDemoPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import { ForbiddenPage, NotFoundPage } from "./pages/ErrorPages.jsx";
 
@@ -78,9 +76,6 @@ const ROUTES = [
   { path: "users", permission: "users.view", element: <UsersPage /> },
   { path: "roles", permission: "roles.view", element: <RolesPage /> },
   { path: "branches", permission: "branches.view", element: <BranchesPage /> },
-  { path: "reports", permission: "reports.view", element: <ReportsPage /> },
-  { path: "ai-insights", permission: "ai.view", element: <AIInsightsPage /> },
-  { path: "enterprise-ai-demo", permission: "ai.view", element: <EnterpriseAIDemoPage /> },
   { path: "settings", permission: "settings.view", element: <SettingsPage /> },
 ];
 

@@ -14,7 +14,6 @@ import { StatusBadge } from "../components/data-display/StatusBadge.jsx";
 import { ChartTooltip, useAxisLabel, useChart } from "../components/data-display/charts.jsx";
 import { KpiGrid } from "../components/dashboard/KpiGrid.jsx";
 import { DashboardCustomizer } from "../components/dashboard/DashboardCustomizer.jsx";
-import { AIInsightCards } from "../components/ai/index.js";
 import { StaggerGroup } from "../components/ui/Motion.jsx";
 import { Button, Card, CardHeader, CardContent, Skeleton, ErrorState, EmptyState, Avatar, DateRangePicker } from "../components/ui/index.js";
 import { cn } from "../utils/cn.js";
@@ -139,8 +138,7 @@ export default function DashboardPage() {
         <KpiGrid cards={visibleCards} columns={layout.columns} loading={loading} onMove={move} onMoveBy={(id, d) => moveBy(id, d, true)} onHide={(id) => setVisible(id, false)} onDesign={(id) => openCustomizer(id)} />
       )}
 
-      {/* Compact AI insights (frontend mock; hidden when disabled in Settings) */}
-      <AIInsightCards className="mt-6" refreshKey={data?.kpis?.revenue?.value} />
+
 
       {/* Revenue trend + Sales by category */}
       <StaggerGroup className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
