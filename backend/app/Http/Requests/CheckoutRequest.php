@@ -18,7 +18,7 @@ class CheckoutRequest extends FormRequest
             'customer_id' => ['nullable', 'integer'],
             'branch_id' => ['nullable', 'integer'],
             'discount_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'payment_method' => ['required', 'in:cash,card,qr,bank_transfer,khqr'],
+            'payment_method' => ['required', 'in:cash,card,qr,bank_transfer'],
             'received' => ['nullable', 'numeric', 'min:0'],
             'currency' => ['nullable', 'in:USD,KHR'],
             'mode' => ['nullable', 'in:quick,standard,wholesale,refund'],

@@ -4,7 +4,6 @@ use App\Http\Controllers\Api\V1\{
     AuthController,
     DashboardController,
     InventoryController,
-    KhqrPaymentController,
     MiscController,
     PosController,
     PurchaseController,
@@ -263,11 +262,6 @@ Route::prefix('v1')->group(function () {
             [SettingsController::class, 'update']
         )->middleware('permission:settings.update');
 
-        Route::post(
-            'settings/khqr-image',
-            [SettingsController::class, 'uploadKhqrImage']
-        )->middleware('permission:settings.update');
-
         Route::get(
             'preferences',
             [SettingsController::class, 'preferences']
@@ -282,44 +276,6 @@ Route::prefix('v1')->group(function () {
             'preferences/{key}',
             [SettingsController::class, 'resetPreference']
         )->where('key', '[A-Za-z0-9_.\-]+');
-
-        Route::prefix('khqr')->group(function () {
-            Route::post(
-                'payments',
-                [KhqrPaymentController::class, 'store']
-            )->middleware('permission:sales.create');
-
-            Route::post(
-                'payments/{id}/receipt',
-                [KhqrPaymentController::class, 'uploadReceipt']
-            )
-                ->middleware('permission:sales.create')
-                ->whereNumber('id');
-
-            Route::get(
-                'payments/{id}/status',
-                [KhqrPaymentController::class, 'status']
-            )->whereNumber('id');
-
-            Route::get(
-                'payments',
-                [KhqrPaymentController::class, 'index']
-            )->middleware('permission:orders.view');
-
-            Route::post(
-                'payments/{id}/approve',
-                [KhqrPaymentController::class, 'approve']
-            )
-                ->middleware('permission:orders.update')
-                ->whereNumber('id');
-
-            Route::post(
-                'payments/{id}/reject',
-                [KhqrPaymentController::class, 'reject']
-            )
-                ->middleware('permission:orders.update')
-                ->whereNumber('id');
-        });
 
         Route::get(
             'notifications',
