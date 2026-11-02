@@ -922,11 +922,6 @@ const httpApi = {
   getPublicSettings: () => http.get("/settings/public"),
   getSettings: () => http.get("/settings"),
   updateSettings: (payload) => http.put("/settings", payload),
-  uploadKhqrImage: (file) => {
-    const formData = new FormData();
-    formData.append("khqr_image", file);
-    return http.post("/settings/khqr-image", formData);
-  },
   getPreferences: () => http.get("/preferences"),
   updatePreference: (key, value) => http.put(`/preferences/${key}`, { value }),
   resetPreference: (key) => http.delete(`/preferences/${key}`),

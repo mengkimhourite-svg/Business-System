@@ -21,7 +21,6 @@ import {
   BarChart3,
   Sparkles,
   Settings,
-  QrCode,
 } from "lucide-react";
 
 /**
@@ -55,7 +54,6 @@ export const NAVIGATION = [
     items: [
       { key: "sales", path: "/sales", labelKey: "nav.sales", icon: ShoppingCart, permission: "sales.view" },
       { key: "orders", path: "/orders", labelKey: "nav.orders", icon: ClipboardList, permission: "orders.view" },
-      { key: "khqr-payments", path: "/khqr-payments", labelKey: "nav.khqrPayments", icon: QrCode, permission: "orders.view" },
       { key: "purchases", path: "/purchases", labelKey: "nav.purchases", icon: ShoppingBag, permission: "purchases.view" },
       { key: "inventory", path: "/inventory", labelKey: "nav.inventory", icon: Warehouse, permission: "inventory.view" },
       { key: "expenses", path: "/expenses", labelKey: "nav.expenses", icon: Receipt, permission: "expenses.view" },

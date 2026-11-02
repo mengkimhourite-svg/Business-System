@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Plus, Minus, Trash2, ShoppingCart, X, Printer, CheckCircle2, Banknote, CreditCard, QrCode, Landmark, ScanBarcode, Search } from "lucide-react";
+import { Plus, Minus, Trash2, ShoppingCart, X, Printer, CheckCircle2, Banknote, CreditCard, Landmark, ScanBarcode, Search } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { cn } from "../utils/cn.js";
 import { useI18n } from "../i18n/index.jsx";
@@ -11,7 +11,6 @@ import { api, errorKey } from "../services/api.js";
 import { PageHeader } from "../components/layout/PageHeader.jsx";
 import { Button, Card, Input, Select, Field, Modal, Badge, Avatar, EmptyState, ErrorState, Skeleton, Tabs, Alert, useToast } from "../components/ui/index.js";
 import { Zap, ShoppingBag, Warehouse, RotateCcw } from "lucide-react";
-import KhqrPaymentModal from "../components/pos/KhqrPaymentModal.jsx";
 
 /** POS sell modes — presentation only (no extra backend concepts). */
 const SELL_MODES = [
@@ -46,8 +45,6 @@ export default function POSPage() {
   const [completed, setCompleted] = useState(null);
   const [branches, setBranches] = useState([]);
   const [selectedBranchId, setSelectedBranchId] = useState(null);
-  const [khqrOpen, setKhqrOpen] = useState(false);
-  const [pendingOrder, setPendingOrder] = useState(null);
   const load = useCallback(async ({ showLoading = true } = {}) => {
     if (showLoading) setLoading(true);
     setError(null);
@@ -154,32 +151,20 @@ export default function POSPage() {
         customer_id: customerId ? Number(customerId) : null,
         discount_percent: discountPct,
         payment_method: method,
-        received: method === "cash" ? receivedDisplay : (method === "khqr" ? total : receivedBase),
+        received: method === "cash" ? receivedDisplay : receivedBase,
         currency: money.display,
         mode,
         branch_id: Number(selectedBranchId),
       });
-      // For KHQR: open the payment modal to handle receipt upload + verification
-      if (method === "khqr") {
-        setPayOpen(false);
-        setPendingOrder(order);
-        setKhqrOpen(true);
-        setCart([]);
-        setDiscount("");
-        setCustomerId("");
-        setReceived("");
-        load({ showLoading: false });
-      } else {
-        setCompleted(order);
-        setPayOpen(false);
-        setCartOpen(false);
-        setCart([]);
-        setDiscount("");
-        setCustomerId("");
-        setReceived("");
-        toast.success(t("pos.saleCompletedHint", { number: order.number }));
-        load({ showLoading: false });
-      }
+      setCompleted(order);
+      setPayOpen(false);
+      setCartOpen(false);
+      setCart([]);
+      setDiscount("");
+      setCustomerId("");
+      setReceived("");
+      toast.success(t("pos.saleCompletedHint", { number: order.number }));
+      load({ showLoading: false });
     } catch (err) {
       if (err.status === 422 && err.errors) {
         const firstError = Object.values(err.errors)[0];
@@ -206,7 +191,6 @@ export default function POSPage() {
   const methods = [
     { key: "cash", label: t("common.cash"), icon: Banknote },
     { key: "card", label: t("common.card"), icon: CreditCard },
-    { key: "khqr", label: t("common.khqr"), icon: QrCode },
     { key: "bank_transfer", label: t("common.bankTransfer"), icon: Landmark },
   ];
 
@@ -525,13 +509,6 @@ export default function POSPage() {
               </div>
             </div>
           )}
-          {method === "khqr" && (
-            <div className="rounded-lg border border-border bg-surface-muted p-4 text-center">
-              <QrCode className="mx-auto h-8 w-8 text-primary" />
-              <p className="mt-2 text-sm font-medium text-fg">{t("khqr.posHint")}</p>
-              <p className="text-xs text-fg-muted">{t("khqr.posHintSub")}</p>
-            </div>
-          )}
           <div className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
             <span className="text-fg-secondary">{t("pos.changeDue")}</span>
             <span className={cn("font-semibold tabular", insufficient ? "text-danger" : "text-success-dark")}>{money.formatDisplay(changeDisplay)}</span>
@@ -617,18 +594,6 @@ export default function POSPage() {
           </div>
         )}
       </Modal>
-
-      {/* KHQR Payment Modal */}
-      <KhqrPaymentModal
-        open={khqrOpen}
-        onClose={() => { setKhqrOpen(false); setPendingOrder(null); }}
-        order={pendingOrder}
-        onPaid={() => {
-          setKhqrOpen(false);
-          setPendingOrder(null);
-          load({ showLoading: false });
-        }}
-      />
     </>
   );
 }

@@ -52,7 +52,6 @@ The system uses a modern full-stack architecture:
 | Customers                 | Customer management                                       |
 | Expenses                  | Business expense management                               |
 | Payments                  | Payment records and tracking                              |
-| KHQR Payments             | Payment creation, receipt upload, approval, and rejection |
 | Reports                   | Business reports and analytics                            |
 | Currency                  | Currency and exchange-rate management                     |
 | Languages                 | Khmer and English                                         |
@@ -162,7 +161,6 @@ The backend provides APIs for:
 * Suppliers
 * Expenses
 * Payments
-* KHQR payments
 * Users
 * Roles
 * Permissions
@@ -677,7 +675,6 @@ The Smart Business System aims to:
 │  Orders and Purchases                      │
 │  Customers and Suppliers                   │
 │  Expenses and Payments                     │
-│  Bakong KHQR Payments                      │
 │  Reports and Dashboard                     │
 │  Authentication and RBAC                   │
 │  Business and Branches                     │

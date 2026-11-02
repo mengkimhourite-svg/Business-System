@@ -18,7 +18,6 @@ import ProductsPage from "./pages/ProductsPage.jsx";
 import { CategoriesPage, BrandsPage, SuppliersPage, CustomersPage, BranchesPage } from "./pages/SimpleResourcePages.jsx";
 import POSPage from "./pages/POSPage.jsx";
 import OrdersPage from "./pages/OrdersPage.jsx";
-import KhqrPaymentsPage from "./pages/KhqrPaymentsPage.jsx";
 import PurchasesPage from "./pages/PurchasesPage.jsx";
 import InventoryPage from "./pages/InventoryPage.jsx";
 import ExpensesPage from "./pages/ExpensesPage.jsx";
@@ -69,7 +68,6 @@ const ROUTES = [
   { path: "suppliers", permission: "suppliers.view", element: <SuppliersPage /> },
   { path: "sales", permission: "sales.view", element: <POSPage /> },
   { path: "orders", permission: "orders.view", element: <OrdersPage /> },
-  { path: "khqr-payments", permission: "orders.view", element: <KhqrPaymentsPage /> },
   { path: "purchases", permission: "purchases.view", element: <PurchasesPage /> },
   { path: "inventory", permission: "inventory.view", element: <InventoryPage /> },
   { path: "expenses", permission: "expenses.view", element: <ExpensesPage /> },
