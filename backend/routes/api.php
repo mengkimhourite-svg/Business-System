@@ -4,12 +4,14 @@ use App\Http\Controllers\Api\V1\{
     AuthController,
     DashboardController,
     InventoryController,
+    PaymentController,
     MiscController,
     PosController,
     PurchaseController,
     ResourceController,
     SettingsController
 };
+use App\Models\Payment;
 use App\Support\ApiResponse;
 use Illuminate\Support\Facades\Route;
 
@@ -251,6 +253,31 @@ Route::prefix('v1')->group(function () {
             'inventory/adjust',
             [InventoryController::class, 'adjust']
         )->middleware('permission:inventory.adjust');
+
+        Route::get(
+            'payments',
+            [PaymentController::class, 'index']
+        );
+        
+        Route::post(
+            'payments',
+            [PaymentController::class, 'store']
+        );
+
+        Route::get(
+            'payments/{id}',
+            [PaymentController::class, 'show']
+        )->whereNumber('id');
+
+        Route::put(
+            'payments/{id}',
+            [PaymentController::class, 'update']
+        )->whereNumber('id');
+
+        Route::delete(
+            'payments/{id}',
+            [PaymentController::class, 'destroy']
+        )->whereNumber('id');
 
         Route::get(
             'settings',
