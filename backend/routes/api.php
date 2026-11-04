@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\{
     ResourceController,
     SettingsController
 };
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Models\Payment;
 use App\Support\ApiResponse;
 use Illuminate\Support\Facades\Route;
@@ -59,8 +60,18 @@ Route::prefix('v1')->group(function () {
                 'reset-password',
                 [AuthController::class, 'resetPassword']
             );
-        });
 
+            Route::get(
+                'google/redirect',
+                [GoogleAuthController::class, 'redirect']
+            );
+
+            Route::get(
+                'google/callback',
+                [GoogleAuthController::class, 'callback']
+            );
+
+        });
     Route::middleware([
         'auth:sanctum',
         'load.perms',
