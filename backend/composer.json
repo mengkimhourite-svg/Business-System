@@ -7,7 +7,8 @@
     "dedoc/scramble": "^0.13.42",
     "guzzlehttp/guzzle": "^7.2",
     "laravel/framework": "^10.10",
-    "laravel/sanctum": "^3.3"
+    "laravel/sanctum": "^3.3",
+    "laravel/socialite": "^5.31"
   },
   "require-dev": {
     "doctrine/dbal": "^3.10",
