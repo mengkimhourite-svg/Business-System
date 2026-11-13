@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, CheckCircle2, ArrowRight } from "lucide-react";
 import { useI18n } from "../../i18n/index.jsx";
 import { useAuth } from "../../context/AuthContext.jsx";
 import { useSettings } from "../../context/SettingsContext.jsx";
-import { errorKey, USE_MOCK } from "../../services/api.js";
+import { api, tokenStore, API_URL, errorKey, USE_MOCK } from "../../services/api.js";
+import { http } from "../../services/http.js";
+import { authApi } from "../../services/modules/authApi.js";
+import { hydratePreferences } from "../../services/preferences.js";
 import { Button, Field, Input, Checkbox, Alert, useToast } from "../../components/ui/index.js";
 import { LanguageSwitcher, ThemeToggle } from "../../components/layout/Navbar.jsx";
 import { BrandMark } from "../../components/layout/Brand.jsx";
+import { GoogleIcon } from "../../components/icons/GoogleIcon.jsx";
 import { WELCOME_FLAG } from "../../components/layout/WelcomeModal.jsx";
 
 const DEMO_ACCOUNTS = [
@@ -21,7 +25,7 @@ const DEMO_ACCOUNTS = [
 
 export default function LoginPage() {
   const { t } = useI18n();
-  const { login, isAuthenticated } = useAuth();
+  const { login, setUser, isAuthenticated } = useAuth();
   const { settings } = useSettings();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,9 +37,91 @@ export default function LoginPage() {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const from = location.state?.from?.pathname || "/";
 
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const hashPart = window.location.hash.split("?")[1] || "";
+    const hashParams = new URLSearchParams(hashPart);
+
+    const err = searchParams.get("error") || hashParams.get("error");
+    const token = searchParams.get("token") || hashParams.get("token");
+    const code = searchParams.get("code") || hashParams.get("code");
+    const state = searchParams.get("state") || hashParams.get("state");
+
+    if (err) {
+      setFormError(err);
+      toast.error(t("auth.googleAuthFailed"));
+      return;
+    }
+
+    if (token) {
+      setGoogleLoading(true);
+      (async () => {
+        try {
+          tokenStore.set(token);
+          await hydratePreferences();
+          const me = await http.get("/auth/me");
+          setUser(me);
+          window.sessionStorage.setItem(WELCOME_FLAG, "1");
+          toast.success(t("auth.welcomeBack", { name: me?.name || "User" }));
+          navigate("/", { replace: true });
+        } catch {
+          tokenStore.clear();
+          setFormError(t("auth.googleAuthFailed"));
+        } finally {
+          setGoogleLoading(false);
+        }
+      })();
+      return;
+    }
+
+    if (code) {
+      setGoogleLoading(true);
+      (async () => {
+        try {
+          const res = await http.get("/auth/google/callback", { code, state });
+          const receivedToken = res?.token || res?.data?.token;
+          if (receivedToken) tokenStore.set(receivedToken);
+          await hydratePreferences();
+          const authUser = res?.user || res?.data?.user || (await http.get("/auth/me"));
+          setUser(authUser);
+          window.sessionStorage.setItem(WELCOME_FLAG, "1");
+          toast.success(t("auth.welcomeBack", { name: authUser?.name || "User" }));
+          navigate("/", { replace: true });
+        } catch (e) {
+          setFormError(e?.message || t(errorKey(e)) || t("auth.googleAuthFailed"));
+        } finally {
+          setGoogleLoading(false);
+        }
+      })();
+    }
+  }, [navigate, t, toast]);
+
   if (isAuthenticated) return <Navigate to={from} replace />;
+
+  const handleGoogleLogin = async () => {
+    setGoogleLoading(true);
+    setFormError(null);
+    try {
+      const res = await http.get("/auth/google/redirect");
+      const targetUrl = res?.url || res?.data?.url;
+      if (targetUrl) {
+        window.location.href = targetUrl;
+        return;
+      }
+      window.location.href = `${API_URL}/auth/google/redirect`;
+    } catch (err) {
+      if (err?.message) {
+        setFormError(err.message);
+        toast.error(err.message);
+        setGoogleLoading(false);
+      } else {
+        window.location.href = `${API_URL}/auth/google/redirect`;
+      }
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -143,6 +229,28 @@ export default function LoginPage() {
                 </div>
                 <Button type="submit" size="lg" fullWidth loading={loading} rightIcon={ArrowRight}>
                   {loading ? t("auth.signingIn") : t("auth.signIn")}
+                </Button>
+
+                <div className="relative my-4 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative bg-surface px-3 text-xs uppercase tracking-wider text-fg-muted">
+                    {t("auth.or")}
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  fullWidth
+                  loading={googleLoading}
+                  onClick={handleGoogleLogin}
+                  className="gap-2.5 font-medium hover:bg-surface-hover"
+                >
+                  <GoogleIcon className="h-5 w-5" />
+                  <span>{t("auth.signInWithGoogle")}</span>
                 </Button>
               </form>
             </div>

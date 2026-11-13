@@ -11,6 +11,7 @@ import { BrandMark } from "./components/layout/Brand.jsx";
 import { Spinner } from "./components/ui/index.js";
 
 import LoginPage from "./pages/auth/LoginPage.jsx";
+import GoogleCallbackPage from "./pages/auth/GoogleCallbackPage.jsx";
 import LandingPage from "./pages/public/LandingPage.jsx";
 import { ForgotPasswordPage, ResetPasswordPage } from "./pages/auth/PasswordPages.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
@@ -90,6 +91,7 @@ export default function App() {
               <Routes>
                 <Route path="/landing" element={<PublicOnly><LandingPage /></PublicOnly>} />
                 <Route path="/login" element={<LoginPage />} />
+                <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
                 <Route path="/forgot-password" element={<PublicOnly><ForgotPasswordPage /></PublicOnly>} />
                 <Route path="/reset-password" element={<PublicOnly><ResetPasswordPage /></PublicOnly>} />
                 <Route

@@ -309,6 +309,19 @@ const mockApi = {
     tokenStore.clear();
     return true;
   },
+  async googleCallback() {
+    await latency();
+    const db = loadDb();
+    const user = db.users[0];
+    const token = `mock.${user.id}.${Date.now()}`;
+    tokenStore.set(token);
+    user.last_active_at = new Date().toISOString();
+    saveDb();
+    return { token, user: this._profile(user, db) };
+  },
+  getGoogleRedirectUrl() {
+    return `${API_URL}/auth/google/redirect`;
+  },
   _profile(user, db) {
     const role = db.roles.find((r) => r.id === user.role_id);
     return { ...sanitizeUser(user, db), role: role ? { id: role.id, name: role.name, slug: role.slug } : null, permissions: role?.permissions ?? [] };
@@ -899,6 +912,15 @@ const httpApi = {
   resetPassword: (payload) => http.post("/auth/reset-password", payload),
   changePassword: (payload) => http.post("/auth/change-password", payload),
   updateProfile: (payload) => http.put("/auth/profile", payload),
+  async googleCallback(params) {
+    const data = await http.get("/auth/google/callback", params);
+    const token = data?.token || data?.data?.token;
+    if (token) tokenStore.set(token);
+    return data;
+  },
+  getGoogleRedirectUrl() {
+    return `${API_URL}/auth/google/redirect`;
+  },
 
   list: async (resource, params = {}) => paginated(await http.get(pathFor(resource), listParams(params)), params),
   get: (resource, id) => http.get(`${pathFor(resource)}/${id}`),

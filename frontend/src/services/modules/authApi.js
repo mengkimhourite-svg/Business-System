@@ -8,4 +8,6 @@ export const authApi = {
   resetPassword: (p) => api.resetPassword(p),
   changePassword: (p) => api.changePassword(p),
   updateProfile: (p) => api.updateProfile(p),
+  googleCallback: (params) => api.googleCallback(params),
+  getGoogleRedirectUrl: () => api.getGoogleRedirectUrl(),
 };
